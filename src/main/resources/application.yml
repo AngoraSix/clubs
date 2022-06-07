@@ -1,0 +1,18 @@
+context:
+  initializer:
+    classes: com.angorasix.clubs.BeansInitializer
+server:
+  port: ${PORT:9085}
+
+spring:
+  config:
+    import: classpath:/wellknownclubs.yml
+  application:
+    name: ${APP_NAME:clubs}
+  data:
+    mongodb:
+      uri: ${MONGO_DB_URI:mongodb://localhost:27017/clubs}
+
+configs:
+  api:
+    contributorHeader: ${A6_CLUBS_CONTRIBUTORHEADER:A6-Contributor}
