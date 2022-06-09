@@ -36,12 +36,8 @@ class ClubRouter(private val handler: ClubHandler,
                 }
                 accept(APPLICATION_JSON).nest {
                     GET(
-                            "/{id}",
-                            handler::getClub
-                    )
-                    GET(
-                            "",
-                            handler::listClubs
+                            "/{projectId}/{type}",
+                            handler::getWellKnownClub
                     )
                 }
             }

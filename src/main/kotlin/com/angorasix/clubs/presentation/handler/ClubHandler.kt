@@ -50,9 +50,10 @@ class ClubHandler(
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
-    suspend fun getClub(request: ServerRequest): ServerResponse {
-        val clubId = request.pathVariable("id")
-        return service.findSingleClub(clubId)
+    suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
+        val projectId = request.pathVariable("projectId")
+        val type = request.pathVariable("type")
+        return service.findWellKnownClub(type, projectId)
                 ?.let {
                     val outputClub = it.convertToDto()
                     ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
