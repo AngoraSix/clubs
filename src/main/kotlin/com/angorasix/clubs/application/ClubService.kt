@@ -4,7 +4,7 @@ import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.ClubFactory
 import com.angorasix.clubs.domain.club.ClubRepository
 import com.angorasix.clubs.domain.club.Member
-import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellknownClubConfigurations
+import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import kotlinx.coroutines.flow.Flow
 import reactor.core.publisher.Flux
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
  *
  * @author rozagerardo
  */
-class ClubService(private val repository: ClubRepository, val wellknownClubConfigurations: WellknownClubConfigurations) {
+class ClubService(private val repository: ClubRepository, val wellKnownClubConfigurations: WellKnownClubConfigurations) {
 
     /**
      * Method to retrieve a collection of [Club]s.
@@ -28,9 +28,9 @@ class ClubService(private val repository: ClubRepository, val wellknownClubConfi
      * Method to add a member to a [Club]. If the member is a well-known club, then it will be created before adding the member.
      *
      */
-    suspend fun addMember(member: Member, clubId: String, type: String, projectId: String?): Club? {
-        var club = repository.findById(clubId)
-                ?: wellknownClubConfigurations.wellKnownClubDescriptions.find { config -> config.type == type }
+    suspend fun addMemberToWellKnownClub(member: Member, type: String, projectId: String?): Club? {
+        var club = repository.findByTypeAndProjectId(type, projectId)
+                ?: wellKnownClubConfigurations.wellKnownClubDescriptions.find { config -> config.type == type }
                         ?.let { ClubFactory.fromDescription(it, projectId) }
         return club?.let {
             it.addMember(member)

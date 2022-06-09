@@ -12,7 +12,6 @@ import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.awaitBody
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.reactive.function.server.buildAndAwait
@@ -68,12 +67,12 @@ class ClubHandler(
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
-    suspend fun addMember(request: ServerRequest): ServerResponse {
+    suspend fun addMemberToWellKnownClub(request: ServerRequest): ServerResponse {
         val memberDetails = request.attributes()[serviceConfigs.api.contributorHeader]
-        val clubId = request.pathVariable("id")
-        val clubData = request.awaitBody<ClubDto>()
+        val projectId = request.pathVariable("projectId")
+        val type = request.pathVariable("type")
         return if (memberDetails is Member) {
-            return service.addMember(memberDetails, clubId, clubData.type, clubData.projectId)
+            return service.addMemberToWellKnownClub(memberDetails, type, projectId)
                     ?.convertToDto()
                     ?.let {
                         ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)

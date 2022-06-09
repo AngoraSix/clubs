@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration
  * @author rozagerardo
  */
 @Configuration
-@ConfigurationProperties(prefix = "other")
-class WellknownClubConfigurations {
+@ConfigurationProperties(prefix = "configs")
+class WellKnownClubConfigurations {
     lateinit var wellKnownClubTypes: Map<String, String>
     lateinit var wellKnownClubDescriptions: Collection<WellKnownClubDescription>
 }

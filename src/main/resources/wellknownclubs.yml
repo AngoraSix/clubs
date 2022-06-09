@@ -1,8 +1,8 @@
-other:
+configs:
   wellKnownClubTypes:
-    contributorCandidates: contributorCandidates
+    contributorCandidates: ${A6_CLUBS_WELLKNOWNTYPES_CONTRIBUTORCANDIDATES:contributorCandidates}
   wellKnownClubDescriptions:
-    - type: ${other.wellKnownClubTypes.contributorCandidates}
+    - type: ${configs.wellKnownClubTypes.contributorCandidates}
       description: Club of all the candidates that shown interested in a project
       open: true
       public: false

@@ -25,25 +25,27 @@ class ClubRouter(private val handler: ClubHandler,
      */
     fun clubRouterFunction() = coRouter {
         "/clubs".nest {
-            method(HttpMethod.POST).nest {
-                filter { request, next ->
-                    headerFilterFunction(request, next, serviceConfigs, objectMapper)
+            "/well-known".nest {
+                method(HttpMethod.POST).nest {
+                    filter { request, next ->
+                        headerFilterFunction(request, next, serviceConfigs, objectMapper)
+                    }
+                    POST("{projectId}/{type}/add-member",
+                            handler::addMemberToWellKnownClub
+                    )
                 }
-                POST("{id}/add-member",
-                        handler::addMember
-                )
+                accept(APPLICATION_JSON).nest {
+                    GET(
+                            "/{id}",
+                            handler::getClub
+                    )
+                    GET(
+                            "",
+                            handler::listClubs
+                    )
+                }
             }
-            accept(APPLICATION_JSON).nest {
-                GET(
-                        "/{id}",
-                        handler::getClub
-                )
-                GET(
-                        "",
-                        handler::listClubs
-                )
-            }
-        }
 
+        }
     }
 }
