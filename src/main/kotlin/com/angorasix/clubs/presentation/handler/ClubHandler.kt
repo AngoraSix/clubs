@@ -51,9 +51,10 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
+        val contributor = request.attributes()[serviceConfigs.api.contributorHeader]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        return service.findWellKnownClub(type, projectId)
+        return service.findWellKnownClub(type, projectId, contributor as Member?)
                 ?.let {
                     val outputClub = it.convertToDto()
                     ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)

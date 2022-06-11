@@ -9,6 +9,7 @@ package com.angorasix.clubs.domain.club
 data class Member(
         var contributorId: String,
         var roles: Collection<String> = mutableSetOf(),
+        var isProjectAdmin: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean =
             other is Member && other.contributorId == contributorId

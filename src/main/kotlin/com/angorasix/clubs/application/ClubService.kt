@@ -44,9 +44,9 @@ class ClubService(private val repository: ClubRepository, val wellKnownClubConfi
      * @param clubId [Club] id
      * @return a [Mono] with the persisted [Club]
      */
-    suspend fun findWellKnownClub(type: String, projectId: String): Club? =
+    suspend fun findWellKnownClub(type: String, projectId: String, contributor: Member?): Club? =
             if (wellKnownClubConfigurations.wellKnownClubTypes.containsValue(type))
-                repository.findByTypeAndProjectId(type, projectId)
+                repository.findByTypeAndProjectId(type, projectId).takeIf { it?.isVisibleToMember(contributor) ?: false }
             else
                 null
 }

@@ -41,19 +41,7 @@ data class Club @PersistenceCreator private constructor(
             social: Boolean,
             requirements: Set<String> = mutableSetOf(),
             zone: ZoneId? = ZoneId.systemDefault(),
-    ) : this(
-            null,
-            name,
-            type,
-            description,
-            projectId,
-            members,
-            open,
-            public,
-            social,
-            requirements,
-            ZonedDateTime.now(zone)
-    )
+    ) : this(null, name, type, description, projectId, members, open, public, social, requirements, ZonedDateTime.now(zone))
 
     /**
      * Add a single member to the set.
@@ -63,4 +51,13 @@ data class Club @PersistenceCreator private constructor(
     fun addMember(member: Member) {
         members.add(member)
     }
+
+    /**
+     * Checks whether a particular member has visibility over this project, whether because it's 'public' or 'social' and the member belongs to the club.
+     *
+     * @param contributor - contributor trying to see the Club.
+     */
+    fun isVisibleToMember(contributor: Member?): Boolean = public.or(
+            social.and(members.contains(contributor))).or(contributor?.isProjectAdmin ?: false)
+
 }

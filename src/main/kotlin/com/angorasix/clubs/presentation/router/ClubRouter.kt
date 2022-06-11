@@ -35,6 +35,9 @@ class ClubRouter(private val handler: ClubHandler,
                     )
                 }
                 accept(APPLICATION_JSON).nest {
+                    filter { request, next ->
+                        headerFilterFunction(request, next, serviceConfigs, objectMapper, true)
+                    }
                     GET(
                             "/{projectId}/{type}",
                             handler::getWellKnownClub
