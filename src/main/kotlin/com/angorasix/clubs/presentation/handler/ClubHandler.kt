@@ -4,6 +4,9 @@ import com.angorasix.clubs.application.ClubService
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.config.ServiceConfigs
+import com.angorasix.clubs.infrastructure.presentation.error.resolveBadRequest
+import com.angorasix.clubs.infrastructure.presentation.error.resolveExceptionResponse
+import com.angorasix.clubs.infrastructure.presentation.error.resolveNotFound
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
@@ -14,7 +17,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
-import org.springframework.web.reactive.function.server.buildAndAwait
 
 /**
  * Club Handler (Controller) containing all handler functions related to Club endpoints.
@@ -59,8 +61,7 @@ class ClubHandler(
                     val outputClub = it.convertToDto()
                     ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                             .bodyValueAndAwait(outputClub)
-                } ?: ServerResponse.notFound()
-                .buildAndAwait()
+                } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
     }
 
     /**
@@ -74,17 +75,20 @@ class ClubHandler(
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         return if (memberDetails is Member) {
-            return service.addMemberToWellKnownClub(memberDetails, type, projectId)
-                    ?.convertToDto()
-                    ?.let {
-                        ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                                .bodyValueAndAwait(
-                                        it
-                                )
-                    } ?: ServerResponse.notFound().buildAndAwait()
-
+            try {
+                return service.addMemberToWellKnownClub(memberDetails, type, projectId)
+                        ?.convertToDto()
+                        ?.let {
+                            ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValueAndAwait(
+                                            it
+                                    )
+                        } ?: resolveNotFound("Can't create or add member to this Well-Known Club", "Well-known Club")
+            } catch (ex: Exception) {
+                return resolveExceptionResponse(ex, "Well-Known Club")
+            }
         } else {
-            ServerResponse.badRequest().buildAndAwait()
+            resolveBadRequest("Invalid Contributor Header", "Contributor Header")
         }
     }
 }

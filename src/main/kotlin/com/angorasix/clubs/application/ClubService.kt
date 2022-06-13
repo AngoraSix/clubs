@@ -29,6 +29,7 @@ class ClubService(private val repository: ClubRepository, val wellKnownClubConfi
      *
      */
     suspend fun addMemberToWellKnownClub(member: Member, type: String, projectId: String?): Club? {
+        if (member.isProjectAdmin) throw IllegalArgumentException("Can't add Admin as member")
         var club = repository.findByTypeAndProjectId(type, projectId)
                 ?: wellKnownClubConfigurations.wellKnownClubDescriptions.find { config -> config.type == type }
                         ?.let { ClubFactory.fromDescription(it, projectId) }
