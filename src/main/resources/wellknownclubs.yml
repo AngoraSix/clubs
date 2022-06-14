@@ -1,0 +1,11 @@
+configs:
+  wellKnownClubTypes:
+    contributorCandidates: ${A6_CLUBS_WELLKNOWNTYPES_CONTRIBUTORCANDIDATES:contributor-candidates}
+  wellKnownClubDescriptions:
+    - type: ${configs.wellKnownClubTypes.contributorCandidates}
+      description: Club of all the candidates that shown interested in a project
+      open: true
+      public: false
+      social: false
+      requirements:
+      - access:profile
