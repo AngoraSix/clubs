@@ -22,7 +22,6 @@ data class Club @PersistenceCreator private constructor(
         val open: Boolean, // anyone can access without invitation
         val public: Boolean, // visible for the rest
         val social: Boolean, // members can interact / see themselves
-        val requirements: Set<String> = mutableSetOf(),
         val createdAt: ZonedDateTime,
 ) {
 
@@ -39,9 +38,17 @@ data class Club @PersistenceCreator private constructor(
             open: Boolean,
             public: Boolean,
             social: Boolean,
-            requirements: Set<String> = mutableSetOf(),
             zone: ZoneId? = ZoneId.systemDefault(),
-    ) : this(null, name, type, description, projectId, members, open, public, social, requirements, ZonedDateTime.now(zone))
+    ) : this(null,
+            name,
+            type,
+            description,
+            projectId,
+            members,
+            open,
+            public,
+            social,
+            ZonedDateTime.now(zone))
 
     /**
      * Add a single member to the set.
@@ -59,5 +66,12 @@ data class Club @PersistenceCreator private constructor(
      */
     fun isVisibleToMember(contributor: Member?): Boolean = public.or(
             social.and(members.contains(contributor))).or(contributor?.isProjectAdmin ?: false)
+
+    /**
+     * Checks whether a particular contributor can be added as a member of this Club.
+     *
+     * @param contributor - contributor candidate to join the Club.
+     */
+    fun canAddMember(contributor: Member): Boolean = open.and(!members.contains(contributor)).and(!contributor.isProjectAdmin)
 
 }

@@ -3,7 +3,8 @@ package com.angorasix.clubs.presentation.handler
 import com.angorasix.clubs.application.ClubService
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
-import com.angorasix.clubs.infrastructure.config.ServiceConfigs
+import com.angorasix.clubs.infrastructure.config.ApiConfigs
+import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.presentation.error.resolveBadRequest
 import com.angorasix.clubs.infrastructure.presentation.error.resolveExceptionResponse
 import com.angorasix.clubs.infrastructure.presentation.error.resolveNotFound
@@ -11,12 +12,17 @@ import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
 import kotlinx.coroutines.flow.map
+import org.springframework.hateoas.Link
+import org.springframework.hateoas.MediaTypes
+import org.springframework.hateoas.mediatype.Affordances
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import org.springframework.web.util.UriComponentsBuilder
 
 /**
  * Club Handler (Controller) containing all handler functions related to Club endpoints.
@@ -25,7 +31,8 @@ import org.springframework.web.reactive.function.server.bodyValueAndAwait
  */
 class ClubHandler(
         private val service: ClubService,
-        private val serviceConfigs: ServiceConfigs,
+        private val apiConfigs: ApiConfigs,
+        private val wellKnownClubConfigurations: WellKnownClubConfigurations
 ) {
 
 
@@ -53,13 +60,13 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[serviceConfigs.api.contributorHeader]
+        val contributor = request.attributes()[apiConfigs.headers.contributor]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         return service.findWellKnownClub(type, projectId, contributor as Member?)
                 ?.let {
-                    val outputClub = it.convertToDto()
-                    ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                    val outputClub = it.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
+                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
                             .bodyValueAndAwait(outputClub)
                 } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
     }
@@ -71,13 +78,13 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun addMemberToWellKnownClub(request: ServerRequest): ServerResponse {
-        val memberDetails = request.attributes()[serviceConfigs.api.contributorHeader]
+        val contributor = request.attributes()[apiConfigs.headers.contributor]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        return if (memberDetails is Member) {
+        return if (contributor is Member) {
             try {
-                return service.addMemberToWellKnownClub(memberDetails, type, projectId)
-                        ?.convertToDto()
+                return service.addMemberToWellKnownClub(contributor, type, projectId)
+                        ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
                         ?.let {
                             ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                                     .bodyValueAndAwait(
@@ -105,9 +112,45 @@ private fun Club.convertToDto(): ClubDto {
             open,
             public,
             social,
-            requirements,
             createdAt
     )
+}
+
+private fun Club.convertToDto(contributor: Member?, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
+    return ClubDto(
+            id,
+            name,
+            type,
+            description,
+            projectId,
+            members.map { it.convertToDto() }
+                    .toMutableSet(),
+            open,
+            public,
+            social,
+            createdAt
+    ).resolveHypermedia(contributor, this, apiConfigs, wellKnownClubConfigurations, request)
+}
+
+private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
+    val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
+    // self
+    add(Link.of(uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString()).withRel(wellKnownGetSingleRoute.name).expand(projectId, type))
+
+    // add member
+    if (contributor != null && club.canAddMember(contributor)) {
+        val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
+        val addMemberLink = Link.of(uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build().toUriString()).withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
+        val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST).withInput(wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java).withName(wellKnownAddMemberRoute.name).toLink()
+        add(addMemberAffordanceLink)
+    }
+    return this
+}
+
+private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPath().let {
+    UriComponentsBuilder.fromHttpRequest(request.exchange().request)
+            .replacePath(it.toString()) //
+            .replaceQuery("")
 }
 
 private fun Member.convertToDto(): MemberDto {

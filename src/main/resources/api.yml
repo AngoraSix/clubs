@@ -1,0 +1,22 @@
+configs:
+  api:
+    headers:
+      contributor: ${A6_CLUBS_CONTRIBUTORHEADER:A6-Contributor}
+    basePaths:
+      clubs: clubs
+      wellKnown: "/well-known"
+    routes:
+      wellKnownGetSingle:
+        name: club
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: GET
+        path: "/{projectId}/{type}"
+      wellKnownAddMember:
+        name: addMember
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: POST
+        path: "/{projectId}/{type}/add-member"

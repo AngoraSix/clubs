@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
  *
  * @author rozagerardo
  */
-class ClubService(private val repository: ClubRepository, val wellKnownClubConfigurations: WellKnownClubConfigurations) {
+class ClubService(private val repository: ClubRepository, private val wellKnownClubConfigurations: WellKnownClubConfigurations) {
 
     /**
      * Method to retrieve a collection of [Club]s.
@@ -31,7 +31,7 @@ class ClubService(private val repository: ClubRepository, val wellKnownClubConfi
     suspend fun addMemberToWellKnownClub(member: Member, type: String, projectId: String?): Club? {
         if (member.isProjectAdmin) throw IllegalArgumentException("Can't add Admin as member")
         var club = repository.findByTypeAndProjectId(type, projectId)
-                ?: wellKnownClubConfigurations.wellKnownClubDescriptions.find { config -> config.type == type }
+                ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
                         ?.let { ClubFactory.fromDescription(it, projectId) }
         return club?.let {
             it.addMember(member)
@@ -46,7 +46,7 @@ class ClubService(private val repository: ClubRepository, val wellKnownClubConfi
      * @return a [Mono] with the persisted [Club]
      */
     suspend fun findWellKnownClub(type: String, projectId: String, contributor: Member?): Club? =
-            if (wellKnownClubConfigurations.wellKnownClubTypes.containsValue(type))
+            if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type))
                 repository.findByTypeAndProjectId(type, projectId).takeIf { it?.isVisibleToMember(contributor) ?: false }
             else
                 null

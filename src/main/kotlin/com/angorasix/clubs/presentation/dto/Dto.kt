@@ -1,5 +1,6 @@
 package com.angorasix.clubs.presentation.dto
 
+import org.springframework.hateoas.RepresentationModel
 import java.time.ZonedDateTime
 
 /**
@@ -22,9 +23,8 @@ data class ClubDto(
         val open: Boolean? = null,
         val public: Boolean? = null,
         val social: Boolean? = null,
-        val requirements: Set<String> = mutableSetOf(),
         val createdAt: ZonedDateTime? = null,
-)
+) : RepresentationModel<ClubDto>()
 
 data class ContributorHeaderDto(
         var contributorId: String,

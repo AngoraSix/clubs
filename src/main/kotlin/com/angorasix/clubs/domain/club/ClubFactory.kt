@@ -19,8 +19,7 @@ object ClubFactory {
                 mutableSetOf(),
                 clubDescription.open,
                 clubDescription.public,
-                clubDescription.social,
-                clubDescription.requirements)
+                clubDescription.social)
     }
 
 }
