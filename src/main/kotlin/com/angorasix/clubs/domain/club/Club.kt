@@ -60,6 +60,15 @@ data class Club @PersistenceCreator private constructor(
     }
 
     /**
+     * Remove a single member from the set.
+     *
+     * @param member - contributor to be removed from the set
+     */
+    fun removeMember(member: Member) {
+        members.remove(member)
+    }
+
+    /**
      * Checks whether a particular member has visibility over this project, whether because it's 'public' or 'social' and the member belongs to the club.
      *
      * @param contributor - contributor trying to see the Club.
@@ -73,5 +82,12 @@ data class Club @PersistenceCreator private constructor(
      * @param contributor - contributor candidate to join the Club.
      */
     fun canAddMember(contributor: Member): Boolean = open.and(!members.contains(contributor)).and(!contributor.isProjectAdmin)
+
+    /**
+     * Checks whether a particular contributor can be removed as a member of this Club.
+     *
+     * @param contributor - contributor candidate to leave the Club.
+     */
+    fun canRemoveMember(contributor: Member): Boolean = open.and(members.contains(contributor)).and(!contributor.isProjectAdmin)
 
 }

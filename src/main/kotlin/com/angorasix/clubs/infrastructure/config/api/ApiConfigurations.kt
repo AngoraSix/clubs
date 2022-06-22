@@ -28,10 +28,12 @@ class HeadersConfigs @ConstructorBinding constructor(val contributor: String) {
 class BasePathConfigs @ConstructorBinding constructor(val clubs: String, val wellKnown: String) {
 }
 
-class RoutesConfigs @ConstructorBinding constructor(val wellKnownGetSingle: Route, val wellKnownAddMember: Route) {
+class RoutesConfigs @ConstructorBinding constructor(val wellKnownGetSingle: Route,
+                                                    val wellKnownAddMember: Route,
+                                                    val wellKnownRemoveMember: Route) {
 }
 
 data class Route(val name: String, val basePaths: List<String>, val method: HttpMethod, val path: String) {
 
-    fun resolvePath() : String = basePaths.joinToString("").plus(path)
+    fun resolvePath(): String = basePaths.joinToString("").plus(path)
 }

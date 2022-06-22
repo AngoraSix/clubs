@@ -25,7 +25,7 @@ class ClubService(private val repository: ClubRepository, private val wellKnownC
     fun findClubs(filter: ListClubsFilter): Flow<Club> = repository.findUsingFilter(filter)
 
     /**
-     * Method to add a member to a [Club]. If the member is a well-known club, then it will be created before adding the member.
+     * Method to add a member to a [Club]. If the club is a well-known club, then it will be created before adding the member.
      *
      */
     suspend fun addMemberToWellKnownClub(member: Member, type: String, projectId: String?): Club? {
@@ -35,6 +35,19 @@ class ClubService(private val repository: ClubRepository, private val wellKnownC
                         ?.let { ClubFactory.fromDescription(it, projectId) }
         return club?.let {
             it.addMember(member)
+            repository.save(it)
+        }
+    }
+
+    /**
+     * Method to remove a member from a [Club].
+     *
+     */
+    suspend fun removeMemberFromWellKnownClub(member: Member, type: String, projectId: String?): Club? {
+        if (member.isProjectAdmin) throw IllegalArgumentException("Can't Remove Admin as member")
+        var club = repository.findByTypeAndProjectId(type, projectId)
+        return club?.let {
+            it.removeMember(member)
             repository.save(it)
         }
     }

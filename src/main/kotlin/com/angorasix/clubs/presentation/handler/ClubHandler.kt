@@ -48,7 +48,7 @@ class ClubHandler(
         return service.findClubs(request.queryParams().toQueryFilter())
                 .map { it.convertToDto() }
                 .let {
-                    ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
                             .bodyAndAwait(it)
                 }
     }
@@ -72,7 +72,7 @@ class ClubHandler(
     }
 
     /**
-     * Handler for the Create Clubs endpoint, to create a new Club entity.
+     * Handler for the Add Member to Well-Known Club endpoint.
      *
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
@@ -86,11 +86,39 @@ class ClubHandler(
                 return service.addMemberToWellKnownClub(contributor, type, projectId)
                         ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
                         ?.let {
-                            ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
                                     .bodyValueAndAwait(
                                             it
                                     )
                         } ?: resolveNotFound("Can't create or add member to this Well-Known Club", "Well-known Club")
+            } catch (ex: Exception) {
+                return resolveExceptionResponse(ex, "Well-Known Club")
+            }
+        } else {
+            resolveBadRequest("Invalid Contributor Header", "Contributor Header")
+        }
+    }
+
+    /**
+     * Handler for the Remove Member from Well-Known Club endpoint.
+     *
+     * @param request - HTTP `ServerRequest` object
+     * @return the `ServerResponse`
+     */
+    suspend fun removeMemberFromWellKnownClub(request: ServerRequest): ServerResponse {
+        val contributor = request.attributes()[apiConfigs.headers.contributor]
+        val projectId = request.pathVariable("projectId")
+        val type = request.pathVariable("type")
+        return if (contributor is Member) {
+            try {
+                return service.removeMemberFromWellKnownClub(contributor, type, projectId)
+                        ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
+                        ?.let {
+                            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                                    .bodyValueAndAwait(
+                                            it
+                                    )
+                        } ?: resolveNotFound("Can't remove member from non-existing Well-Known Club", "Well-known Club")
             } catch (ex: Exception) {
                 return resolveExceptionResponse(ex, "Well-Known Club")
             }
@@ -138,11 +166,18 @@ private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfi
     add(Link.of(uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString()).withRel(wellKnownGetSingleRoute.name).expand(projectId, type))
 
     // add member
-    if (contributor != null && club.canAddMember(contributor)) {
-        val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
-        val addMemberLink = Link.of(uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build().toUriString()).withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
-        val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST).withInput(wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java).withName(wellKnownAddMemberRoute.name).toLink()
-        add(addMemberAffordanceLink)
+    if (contributor != null) {
+        if (club.canAddMember(contributor)) {
+            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
+            val addMemberLink = Link.of(uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build().toUriString()).withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
+            val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST).withInput(wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java).withName(wellKnownAddMemberRoute.name).toLink()
+            add(addMemberAffordanceLink)
+        } else if (club.canRemoveMember(contributor)) {
+            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownRemoveMember
+            val removeMemberLink = Link.of(uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build().toUriString()).withRel(wellKnownRemoveMemberRoute.name).expand(projectId, type)
+            val removeMemberAffordanceLink = Affordances.of(removeMemberLink).afford(HttpMethod.POST).withName(wellKnownRemoveMemberRoute.name).toLink()
+            add(removeMemberAffordanceLink)
+        }
     }
     return this
 }

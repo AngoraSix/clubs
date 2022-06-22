@@ -31,6 +31,12 @@ class ClubRouter(private val handler: ClubHandler,
                     }
                     method(apiConfigs.routes.wellKnownAddMember.method, handler::addMemberToWellKnownClub)
                 }
+                path(apiConfigs.routes.wellKnownRemoveMember.path).nest {
+                    filter { request, next ->
+                        headerFilterFunction(request, next, apiConfigs, objectMapper)
+                    }
+                    method(apiConfigs.routes.wellKnownRemoveMember.method, handler::removeMemberFromWellKnownClub)
+                }
                 path(apiConfigs.routes.wellKnownGetSingle.path).nest {
                     filter { request, next ->
                         headerFilterFunction(request, next, apiConfigs, objectMapper, true)

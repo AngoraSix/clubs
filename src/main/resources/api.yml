@@ -20,3 +20,10 @@ configs:
           - ${configs.api.basePaths.wellKnown}
         method: POST
         path: "/{projectId}/{type}/add-member"
+      wellKnownRemoveMember:
+        name: removeMember
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: POST
+        path: "/{projectId}/{type}/remove-member"
