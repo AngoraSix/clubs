@@ -13,6 +13,13 @@ configs:
           - ${configs.api.basePaths.wellKnown}
         method: GET
         path: "/{projectId}/{type}"
+      wellKnownPatch:
+        name: clubPatch
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: PATCH
+        path: "/{projectId}/{type}"
       wellKnownAddMember:
         name: addMember
         basePaths:

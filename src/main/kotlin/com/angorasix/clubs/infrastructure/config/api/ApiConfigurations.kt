@@ -29,6 +29,7 @@ class BasePathConfigs @ConstructorBinding constructor(val clubs: String, val wel
 }
 
 class RoutesConfigs @ConstructorBinding constructor(val wellKnownGetSingle: Route,
+                                                    val wellKnownPatch: Route,
                                                     val wellKnownAddMember: Route,
                                                     val wellKnownRemoveMember: Route) {
 }

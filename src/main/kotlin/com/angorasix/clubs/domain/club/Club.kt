@@ -12,13 +12,13 @@ import java.time.ZonedDateTime
  *
  * @author rozagerardo
  */
-data class Club @PersistenceCreator private constructor(
+data class Club @PersistenceCreator constructor(
         @field:Id val id: String?,
-        val name: String,
+        var name: String,
         val type: String,
-        val description: String,
+        var description: String,
         val projectId: String?,
-        val members: MutableSet<Member> = mutableSetOf(),
+        var members: MutableSet<Member> = mutableSetOf(),
         val open: Boolean, // anyone can access without invitation
         val public: Boolean, // visible for the rest
         val social: Boolean, // members can interact / see themselves
