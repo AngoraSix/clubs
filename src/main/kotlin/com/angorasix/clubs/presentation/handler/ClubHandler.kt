@@ -3,20 +3,19 @@ package com.angorasix.clubs.presentation.handler
 import com.angorasix.clubs.application.ClubService
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
+import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.infrastructure.config.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.presentation.error.resolveBadRequest
 import com.angorasix.clubs.infrastructure.presentation.error.resolveExceptionResponse
 import com.angorasix.clubs.infrastructure.presentation.error.resolveNotFound
-import com.angorasix.clubs.infrastructure.presentation.rest.patch.ClubJsonPatch
-import com.angorasix.clubs.infrastructure.presentation.rest.patch.DefaultPatchOperation
+import com.angorasix.clubs.infrastructure.presentation.rest.patch.Patch
 import com.angorasix.clubs.infrastructure.presentation.rest.patch.PatchOperation
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
-import com.fasterxml.jackson.databind.JsonNode
+import com.angorasix.clubs.presentation.dto.PatchOperationSpec
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.fge.jsonpatch.JsonPatch
 import kotlinx.coroutines.flow.map
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.MediaTypes
@@ -26,7 +25,6 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.awaitBody
-import org.springframework.web.reactive.function.server.awaitBodyOrNull
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.util.UriComponentsBuilder
@@ -37,12 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder
  *
  * @author rozagerardo
  */
-class ClubHandler(
-        private val service: ClubService,
-        private val apiConfigs: ApiConfigs,
-        private val wellKnownClubConfigurations: WellKnownClubConfigurations,
-        private val objectMapper: ObjectMapper
-) {
+class ClubHandler(private val service: ClubService, private val apiConfigs: ApiConfigs, private val wellKnownClubConfigurations: WellKnownClubConfigurations, private val objectMapper: ObjectMapper) {
 
 
     /**
@@ -51,15 +44,10 @@ class ClubHandler(
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
-    suspend fun listClubs(
-            @Suppress("UNUSED_PARAMETER") request: ServerRequest
-    ): ServerResponse {
-        return service.findClubs(request.queryParams().toQueryFilter())
-                .map { it.convertToDto() }
-                .let {
-                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                            .bodyAndAwait(it)
-                }
+    suspend fun listClubs(@Suppress("UNUSED_PARAMETER") request: ServerRequest): ServerResponse {
+        return service.findClubs(request.queryParams().toQueryFilter()).map { it.convertToDto() }.let {
+            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyAndAwait(it)
+        }
     }
 
     /**
@@ -72,12 +60,10 @@ class ClubHandler(
         val contributor = request.attributes()[apiConfigs.headers.contributor]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        return service.findWellKnownClub(contributor as Member?, type, projectId)
-                ?.let {
-                    val outputClub = it.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
-                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                            .bodyValueAndAwait(outputClub)
-                } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
+        return service.findWellKnownClubForContributor(contributor as Member?, type, projectId)?.let {
+            val outputClub = it.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
+            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(outputClub)
+        } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
     }
 
     /**
@@ -90,71 +76,13 @@ class ClubHandler(
         val contributor = request.attributes()[apiConfigs.headers.contributor]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        val patch = request.awaitBody(ClubJsonPatch::class)
+        val patch = request.awaitBody(Patch::class)
         return if (contributor is Member) {
             try {
-                service.findWellKnownClub(contributor, type, projectId)?.convertToDto()?.patch(patch, objectMapper)?.convertToDomain()?.let { service.updateWellKnownClub(contributor, type, projectId, it) }?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)?.let {
-                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                            .bodyValueAndAwait(
-                                    it
-                            )
-                } ?: resolveNotFound("Can't create or add member to this Well-Known Club", "Well-known Club")
-            } catch (ex: Exception) {
-                return resolveExceptionResponse(ex, "Well-Known Club")
-            }
-        } else {
-            resolveBadRequest("Invalid Contributor Header", "Contributor Header")
-        }
-    }
-
-    /**
-     * Handler for the Add Member to Well-Known Club endpoint.
-     *
-     * @param request - HTTP `ServerRequest` object
-     * @return the `ServerResponse`
-     */
-    suspend fun addMemberToWellKnownClub(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[apiConfigs.headers.contributor]
-        val projectId = request.pathVariable("projectId")
-        val type = request.pathVariable("type")
-        return if (contributor is Member) {
-            try {
-                return service.addMemberToWellKnownClub(contributor, type, projectId)
-                        ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
-                        ?.let {
-                            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                                    .bodyValueAndAwait(
-                                            it
-                                    )
-                        } ?: resolveNotFound("Can't create or add member to this Well-Known Club", "Well-known Club")
-            } catch (ex: Exception) {
-                return resolveExceptionResponse(ex, "Well-Known Club")
-            }
-        } else {
-            resolveBadRequest("Invalid Contributor Header", "Contributor Header")
-        }
-    }
-
-    /**
-     * Handler for the Remove Member from Well-Known Club endpoint.
-     *
-     * @param request - HTTP `ServerRequest` object
-     * @return the `ServerResponse`
-     */
-    suspend fun removeMemberFromWellKnownClub(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[apiConfigs.headers.contributor]
-        val projectId = request.pathVariable("projectId")
-        val type = request.pathVariable("type")
-        return if (contributor is Member) {
-            try {
-                return service.removeMemberFromWellKnownClub(contributor, type, projectId)
-                        ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
-                        ?.let {
-                            ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                                    .bodyValueAndAwait(
-                                            it
-                                    )
-                        } ?: resolveNotFound("Can't remove member from non-existing Well-Known Club", "Well-known Club")
+                val modifyOperations = patch.operations.map { it.convertToDomainModification(contributor, objectMapper) }
+                service.modifyWellKnownClub(contributor, type, projectId, modifyOperations)?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)?.let {
+                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(it)
+                } ?: resolveNotFound("Can't patch this Well-Known Club", "Well-known Club")
             } catch (ex: Exception) {
                 return resolveExceptionResponse(ex, "Well-Known Club")
             }
@@ -164,36 +92,34 @@ class ClubHandler(
     }
 }
 
+//private suspend fun resolveClubResponse(club: Club, contributor: Member, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest ) : ServerResponse {
+//    return if (club.isVisibleToMember(contributor)) {
+//        val outputClub = club.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
+//        ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+//                .bodyValueAndAwait(outputClub)
+//    } else {
+//        ServerResponse.noContent().buildAndAwait()
+//    }
+//}
+
 private fun Club.convertToDto(): ClubDto {
-    return ClubDto(
-            id,
-            name,
-            type,
-            description,
-            projectId,
-            members.map { it.convertToDto() }
-                    .toMutableSet(),
-            open,
-            public,
-            social,
-            createdAt
-    )
+    return ClubDto(id, name, type, description, projectId, members.map { it.convertToDto() }.toMutableSet(), open, public, social, createdAt)
 }
 
 private fun Club.convertToDto(contributor: Member?, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
-    return ClubDto(
-            id,
+    val showAllData = isVisibleToMember(contributor)
+    return ClubDto(id,
             name,
             type,
             description,
             projectId,
-            members.map { it.convertToDto() }
-                    .toMutableSet(),
-            open,
-            public,
-            social,
-            createdAt
-    ).resolveHypermedia(contributor, this, apiConfigs, wellKnownClubConfigurations, request)
+            if (showAllData) members.map { it.convertToDto() }.toMutableSet()
+            else members.filter { it.contributorId == contributor?.contributorId }.map { it.convertToDto() }.toMutableSet(),
+            if (showAllData) open else null,
+            if (showAllData) public else null,
+            if (showAllData) social else null,
+            if (showAllData) createdAt else null)
+            .resolveHypermedia(contributor, this, apiConfigs, wellKnownClubConfigurations, request)
 }
 
 private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
@@ -221,39 +147,24 @@ private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfi
 }
 
 private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPath().let {
-    UriComponentsBuilder.fromHttpRequest(request.exchange().request)
-            .replacePath(it.toString()) //
+    UriComponentsBuilder.fromHttpRequest(request.exchange().request).replacePath(it.toString()) //
             .replaceQuery("")
 }
 
-private fun ClubDto.patch(patch: ClubJsonPatch, objectMapper: ObjectMapper): ClubDto {
-    return patch.applyPatch(objectMapper, this)
+private fun ClubDto.convertToDomain(): Club {
+    return Club(id, name ?: throw IllegalArgumentException("Club name expected"), type, description ?: throw IllegalArgumentException("Club description expected"), projectId, members.map { it.convertToModel() }.toMutableSet(), open ?: throw IllegalArgumentException("Club open param expected"), public ?: throw IllegalArgumentException("Club public param expected"), social ?: throw IllegalArgumentException("Club social param expected"), createdAt ?: throw IllegalArgumentException("Club createdAt expected"))
 }
 
-private fun ClubDto.convertToDomain(): Club {
-    return Club(id,
-            name ?: throw IllegalArgumentException("Club name expected"),
-            type,
-            description ?: throw IllegalArgumentException("Club description expected"),
-            projectId,
-            members.map { it.convertToModel() }.toMutableSet(),
-            open ?: throw IllegalArgumentException("Club open param expected"),
-            public ?: throw IllegalArgumentException("Club public param expected"),
-            social ?: throw IllegalArgumentException("Club social param expected"),
-            createdAt ?: throw IllegalArgumentException("Club createdAt expected"))
+private fun PatchOperation.convertToDomainModification(contributor: Member, objectMapper: ObjectMapper): ClubModification<out Any> {
+    return PatchOperationSpec.Companion.SupportedOperations.values().find { it.supportsPatchOperation(this) }?.let { it.mapToObjectModification(contributor, this, objectMapper) } ?: throw IllegalArgumentException("Patch Operation not supported")
 }
 
 private fun Member.convertToDto(): MemberDto {
-    return MemberDto(
-            contributorId,
-            roles
-    )
+    return MemberDto(contributorId, roles)
 }
 
 private fun MultiValueMap<String, String>.toQueryFilter(): ListClubsFilter {
-    return ListClubsFilter(getFirst("projectId"),
-            getFirst("type"),
-            getFirst("contributorId"))
+    return ListClubsFilter(getFirst("projectId"), getFirst("type"), getFirst("contributorId"))
 }
 
 private fun MemberDto.convertToModel(): Member {

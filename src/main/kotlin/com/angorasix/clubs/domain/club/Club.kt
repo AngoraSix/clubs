@@ -39,16 +39,7 @@ data class Club @PersistenceCreator constructor(
             public: Boolean,
             social: Boolean,
             zone: ZoneId? = ZoneId.systemDefault(),
-    ) : this(null,
-            name,
-            type,
-            description,
-            projectId,
-            members,
-            open,
-            public,
-            social,
-            ZonedDateTime.now(zone))
+    ) : this(null, name, type, description, projectId, members, open, public, social, ZonedDateTime.now(zone))
 
     /**
      * Add a single member to the set.
@@ -73,8 +64,9 @@ data class Club @PersistenceCreator constructor(
      *
      * @param contributor - contributor trying to see the Club.
      */
-    fun isVisibleToMember(contributor: Member?): Boolean = public.or(
-            social.and(members.contains(contributor))).or(contributor?.isProjectAdmin ?: false)
+    fun isVisibleToMember(contributor: Member?): Boolean = public
+            .or(social.and(members.contains(contributor)))
+            .or(contributor?.isProjectAdmin ?: false)
 
     /**
      * Checks whether a particular contributor can be added as a member of this Club.
