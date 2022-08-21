@@ -1,11 +1,9 @@
 package com.angorasix.clubs.presentation.router
 
-import com.angorasix.clubs.infrastructure.config.ServiceConfigs
+import com.angorasix.clubs.infrastructure.config.ApiConfigs
 import com.angorasix.clubs.presentation.filter.headerFilterFunction
 import com.angorasix.clubs.presentation.handler.ClubHandler
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.web.reactive.function.server.coRouter
 
 /**
@@ -16,35 +14,30 @@ import org.springframework.web.reactive.function.server.coRouter
  */
 class ClubRouter(private val handler: ClubHandler,
                  private val objectMapper: ObjectMapper,
-                 private val serviceConfigs: ServiceConfigs) {
+                 private val apiConfigs: ApiConfigs) {
 
     /**
      * Main RouterFunction configuration for all endpoints related to Clubs.
      *
-     * @return the [RouterFunction] with all the routes for Clubs
+     * @return the RouterFunction with all the routes for Clubs
      */
     fun clubRouterFunction() = coRouter {
-        "/clubs".nest {
-            "/well-known".nest {
-                method(HttpMethod.POST).nest {
+        apiConfigs.basePaths.clubs.nest {
+            apiConfigs.basePaths.wellKnown.nest {
+                path(apiConfigs.routes.wellKnownPatch.path).nest {
                     filter { request, next ->
-                        headerFilterFunction(request, next, serviceConfigs, objectMapper)
+                        headerFilterFunction(request, next, apiConfigs, objectMapper)
                     }
-                    POST("{projectId}/{type}/add-member",
-                            handler::addMemberToWellKnownClub
-                    )
+                    method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
-                accept(APPLICATION_JSON).nest {
+                path(apiConfigs.routes.wellKnownGetSingle.path).nest {
                     filter { request, next ->
-                        headerFilterFunction(request, next, serviceConfigs, objectMapper, true)
+                        headerFilterFunction(request, next, apiConfigs, objectMapper, true)
                     }
-                    GET(
-                            "/{projectId}/{type}",
-                            handler::getWellKnownClub
-                    )
+                    method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
                 }
             }
-
         }
+
     }
 }

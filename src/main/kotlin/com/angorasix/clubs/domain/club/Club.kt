@@ -12,17 +12,16 @@ import java.time.ZonedDateTime
  *
  * @author rozagerardo
  */
-data class Club @PersistenceCreator private constructor(
+data class Club @PersistenceCreator constructor(
         @field:Id val id: String?,
-        val name: String,
+        var name: String,
         val type: String,
-        val description: String,
+        var description: String,
         val projectId: String?,
-        val members: MutableSet<Member> = mutableSetOf(),
+        var members: MutableSet<Member> = mutableSetOf(),
         val open: Boolean, // anyone can access without invitation
         val public: Boolean, // visible for the rest
         val social: Boolean, // members can interact / see themselves
-        val requirements: Set<String> = mutableSetOf(),
         val createdAt: ZonedDateTime,
 ) {
 
@@ -39,9 +38,8 @@ data class Club @PersistenceCreator private constructor(
             open: Boolean,
             public: Boolean,
             social: Boolean,
-            requirements: Set<String> = mutableSetOf(),
             zone: ZoneId? = ZoneId.systemDefault(),
-    ) : this(null, name, type, description, projectId, members, open, public, social, requirements, ZonedDateTime.now(zone))
+    ) : this(null, name, type, description, projectId, members, open, public, social, ZonedDateTime.now(zone))
 
     /**
      * Add a single member to the set.
@@ -53,11 +51,35 @@ data class Club @PersistenceCreator private constructor(
     }
 
     /**
+     * Remove a single member from the set.
+     *
+     * @param member - contributor to be removed from the set
+     */
+    fun removeMember(member: Member) {
+        members.remove(member)
+    }
+
+    /**
      * Checks whether a particular member has visibility over this project, whether because it's 'public' or 'social' and the member belongs to the club.
      *
      * @param contributor - contributor trying to see the Club.
      */
-    fun isVisibleToMember(contributor: Member?): Boolean = public.or(
-            social.and(members.contains(contributor))).or(contributor?.isProjectAdmin ?: false)
+    fun isVisibleToMember(contributor: Member?): Boolean = public
+            .or(social.and(members.contains(contributor)))
+            .or(contributor?.isProjectAdmin ?: false)
+
+    /**
+     * Checks whether a particular contributor can be added as a member of this Club.
+     *
+     * @param contributor - contributor candidate to join the Club.
+     */
+    fun canAddMember(contributor: Member): Boolean = open.and(!members.contains(contributor)).and(!contributor.isProjectAdmin)
+
+    /**
+     * Checks whether a particular contributor can be removed as a member of this Club.
+     *
+     * @param contributor - contributor candidate to leave the Club.
+     */
+    fun canRemoveMember(contributor: Member): Boolean = open.and(members.contains(contributor)).and(!contributor.isProjectAdmin)
 
 }

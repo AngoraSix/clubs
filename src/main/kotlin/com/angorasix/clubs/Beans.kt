@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.support.GenericApplicationContext
 import org.springframework.context.support.beans
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions
+import org.springframework.web.server.adapter.ForwardedHeaderTransformer
 
 val beans = beans {
     bean<MongoCustomConversions> {
@@ -22,6 +23,9 @@ val beans = beans {
     bean<ClubHandler>()
     bean {
         ClubRouter(ref(), ref(), ref()).clubRouterFunction()
+    }
+    bean {
+        ForwardedHeaderTransformer()
     }
 }
 
