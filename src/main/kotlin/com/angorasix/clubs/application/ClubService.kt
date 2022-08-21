@@ -80,7 +80,7 @@ private fun Club.update(updatingMember: Member, updatedData: Club, wellKnown: Bo
 private fun checkedUpdatedMembers(updatingMember: Member, originalMembers: MutableSet<Member>, updatedMembers: MutableSet<Member>): MutableSet<Member> {
     if (updatingMember.isProjectAdmin) return updatedMembers
     return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers))
-    // @TODO: depurate members to avoid adding member with non-allowed roles
+    // @TODO: depurate members to avoid adding member with non-allowed roles and clean up data to allow only well-known data
         updatedMembers
     else
         originalMembers

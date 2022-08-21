@@ -27,7 +27,7 @@ suspend fun headerFilterFunction(
     request.headers().header(apiConfigs.headers.contributor).firstOrNull()?.let {
         val contributorHeaderString = Base64.getUrlDecoder().decode(it)
         val contributorHeader = objectMapper.readValue(contributorHeaderString, ContributorHeaderDto::class.java)
-        val contributorToken = Member(contributorHeader.contributorId, emptySet(), contributorHeader.projectAdmin)
+        val contributorToken = Member(contributorHeader.contributorId, emptySet(), emptyMap(), contributorHeader.projectAdmin)
         request.attributes()[apiConfigs.headers.contributor] = contributorToken
         return next(request)
     }

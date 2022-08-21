@@ -160,7 +160,7 @@ private fun PatchOperation.convertToDomainModification(contributor: Member, obje
 }
 
 private fun Member.convertToDto(): MemberDto {
-    return MemberDto(contributorId, roles)
+    return MemberDto(contributorId, roles, data)
 }
 
 private fun MultiValueMap<String, String>.toQueryFilter(): ListClubsFilter {
@@ -168,5 +168,5 @@ private fun MultiValueMap<String, String>.toQueryFilter(): ListClubsFilter {
 }
 
 private fun MemberDto.convertToModel(): Member {
-    return Member(contributorId ?: throw IllegalArgumentException("Contributor ID expected for Member"), roles)
+    return Member(contributorId ?: throw IllegalArgumentException("Contributor ID expected for Member"), roles, data)
 }

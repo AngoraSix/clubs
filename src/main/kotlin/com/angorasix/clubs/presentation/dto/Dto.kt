@@ -19,6 +19,7 @@ import java.util.function.Predicate
 data class MemberDto(
         var contributorId: String? = null,
         var roles: Collection<String> = mutableSetOf(),
+        var data: Map<String, Any> = mutableMapOf()
 )
 
 data class ClubDto(
