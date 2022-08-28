@@ -7,6 +7,7 @@ import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
+import com.angorasix.commons.domain.RequestingContributor
 import kotlinx.coroutines.flow.Flow
 import reactor.core.publisher.Flux
 
@@ -28,11 +29,11 @@ class ClubService(private val repository: ClubRepository, private val wellKnownC
      * Method to add a member to a [Club]. If the club is a well-known club, then it will be created before adding the member.
      *
      */
-    suspend fun modifyWellKnownClub(updatingContributor: Member, type: String, projectId: String?, modificationOperations: List<ClubModification<out Any>>): Club? {
+    suspend fun modifyWellKnownClub(requestingContributor: RequestingContributor, type: String, projectId: String?, modificationOperations: List<ClubModification<out Any>>): Club? {
         val club = (repository.findByTypeAndProjectId(type, projectId)
                 ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
                         ?.let { ClubFactory.fromDescription(it, projectId) })
-        val updatedClub = club?.let { modificationOperations.fold(it) { accumulatedClub, op -> op.modify(updatingContributor, accumulatedClub) } }
+        val updatedClub = club?.let { modificationOperations.fold(it) { accumulatedClub, op -> op.modify(requestingContributor, accumulatedClub) } }
         return updatedClub?.let { repository.save(updatedClub) }
     }
 
@@ -53,8 +54,8 @@ class ClubService(private val repository: ClubRepository, private val wellKnownC
      * Method to get a single Well-Known [Club] from a type and projectId.
      *
      */
-    suspend fun findWellKnownClubForContributor(contributor: Member?, type: String, projectId: String): Club? =
-            getWellKnownClub(type, projectId)//.takeIf { it?.isVisibleToMember(contributor) == true }
+    suspend fun findWellKnownClubForContributor(contributor: RequestingContributor?, type: String, projectId: String): Club? =
+            getWellKnownClub(type, projectId)//.takeIf { it?.isVisibleToContributor(contributor) == true }
 
     /**
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.

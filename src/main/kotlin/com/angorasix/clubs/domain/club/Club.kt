@@ -1,5 +1,6 @@
 package com.angorasix.clubs.domain.club
 
+import com.angorasix.commons.domain.RequestingContributor
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import java.time.ZoneId
@@ -62,11 +63,11 @@ data class Club @PersistenceCreator constructor(
     /**
      * Checks whether a particular member has visibility over this project, whether because it's 'public' or 'social' and the member belongs to the club.
      *
-     * @param contributor - contributor trying to see the Club.
+     * @param requestingContributor - contributor trying to see the Club.
      */
-    fun isVisibleToMember(contributor: Member?): Boolean = public
-            .or(social.and(members.contains(contributor)))
-            .or(contributor?.isProjectAdmin ?: false)
+    fun isVisibleToContributor(requestingContributor: RequestingContributor?): Boolean = public
+            .or(social.and(members.any { it.contributorId == requestingContributor?.id }))
+            .or(requestingContributor?.isProjectAdmin ?: false)
 
     /**
      * Checks whether a particular contributor can be added as a member of this Club.
