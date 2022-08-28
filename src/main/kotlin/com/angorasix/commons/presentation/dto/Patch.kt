@@ -26,8 +26,6 @@ data class PatchOperation(val op: String, val path: String, val value: JsonNode?
     }
 }
 
-//data class PatchOperationSpec<T, U>(val checkFn: Predicate<PatchOperation>, val mapOperationFn: BiFunction<PatchOperation, ObjectMapper, DomainObjectModification<T, U>>)
-
 abstract class PatchOperationSpec {
     abstract fun supportsPatchOperation(operation: PatchOperation): Boolean
     abstract fun mapToObjectModification(contributor: RequestingContributor, operation: PatchOperation, objectMapper: ObjectMapper): DomainObjectModification<out Any, out Any>

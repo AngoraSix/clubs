@@ -51,10 +51,3 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
         }
     });
 }
-
-//val supportedOperations: List<PatchOperationSpec<out Any>> = listOf(PatchOperationSpec(
-//        { operation -> operation.op == "remove" && operation.path == "/members/-" },
-//        { operation, objectMapper ->
-//            var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-//            RemoveMember(memberValue)
-//        }))

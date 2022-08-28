@@ -57,15 +57,6 @@ class RawWellKnownClubDescription constructor(
         var social: Boolean,
 )
 
-//class RawWellKnownClubDescription @ConstructorBinding constructor(
-//        var type: String,
-//        var description: String,
-//        var open: Boolean,
-//        var public: Boolean,
-//        var social: Boolean,
-//)
-
-
 interface DescriptionRequirements
 
 class ContributorCandidatesRequirements(var contact: String) : DescriptionRequirements

@@ -93,16 +93,6 @@ class ClubHandler(private val service: ClubService, private val apiConfigs: ApiC
     }
 }
 
-//private suspend fun resolveClubResponse(club: Club, contributor: Member, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest ) : ServerResponse {
-//    return if (club.isVisibleToMember(contributor)) {
-//        val outputClub = club.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
-//        ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-//                .bodyValueAndAwait(outputClub)
-//    } else {
-//        ServerResponse.noContent().buildAndAwait()
-//    }
-//}
-
 private fun Club.convertToDto(): ClubDto {
     return ClubDto(id, name, type, description, projectId, members.map { it.convertToDto() }.toMutableSet(), open, public, social, createdAt)
 }
@@ -155,10 +145,6 @@ private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPa
 private fun ClubDto.convertToDomain(): Club {
     return Club(id, name ?: throw IllegalArgumentException("Club name expected"), type, description ?: throw IllegalArgumentException("Club description expected"), projectId, members.map { it.convertToModel() }.toMutableSet(), open ?: throw IllegalArgumentException("Club open param expected"), public ?: throw IllegalArgumentException("Club public param expected"), social ?: throw IllegalArgumentException("Club social param expected"), createdAt ?: throw IllegalArgumentException("Club createdAt expected"))
 }
-
-//private fun PatchOperation.convertToDomainModification(contributor: Member, objectMapper: ObjectMapper): ClubModification<out Any> {
-//    return PatchOperationSpec.Companion.SupportedOperations.values().find { it.supportsPatchOperation(this) }?.let { it.mapToObjectModification(contributor, this, objectMapper) } ?: throw IllegalArgumentException("Patch Operation not supported")
-//}
 
 private fun RequestingContributor.convertToMember(): Member {
     return Member(id, emptyList(), emptyMap(), isProjectAdmin)
