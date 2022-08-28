@@ -5,11 +5,11 @@ import com.angorasix.clubs.domain.club.modification.AddMember
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.domain.club.modification.RemoveMember
 import com.angorasix.clubs.infrastructure.presentation.rest.patch.PatchOperation
+import com.angorasix.clubs.infrastructure.presentation.rest.patch.PatchOperationSpec
+import com.angorasix.commons.domain.RequestingContributor
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.hateoas.RepresentationModel
 import java.time.ZonedDateTime
-import java.util.function.BiFunction
-import java.util.function.Predicate
 
 /**
  *
@@ -35,39 +35,26 @@ data class ClubDto(
         val createdAt: ZonedDateTime? = null,
 ) : RepresentationModel<ClubDto>()
 
-data class ContributorHeaderDto(
-        var contributorId: String,
-        var attributes: Map<String, String> = mutableMapOf(),
-        var projectAdmin: Boolean = false
-)
-
-data class PatchOperationSpec<U>(val checkFn: Predicate<PatchOperation>, val mapOperationFn: BiFunction<PatchOperation, ObjectMapper, ClubModification<U>>) {
-    companion object {
-        enum class SupportedOperations {
-            REMOVE {
-                override fun supportsPatchOperation(operation: PatchOperation): Boolean = operation.op == "remove" && operation.path == "/members/-"
-                override fun mapToObjectModification(contributor: Member, operation: PatchOperation, objectMapper: ObjectMapper): ClubModification<Member> {
-                    var memberValue = operation?.let { objectMapper.treeToValue(operation.value, Member::class.java) } ?: contributor
-                    return RemoveMember(memberValue)
-                }
-            },
-            ADD {
-                override fun supportsPatchOperation(operation: PatchOperation): Boolean = operation.op == "add" && operation.path == "/members/-"
-                override fun mapToObjectModification(contributor: Member, operation: PatchOperation, objectMapper: ObjectMapper): ClubModification<Member> {
-                    var memberValue = operation?.let { objectMapper.treeToValue(operation.value, Member::class.java) } ?: contributor
-                    return AddMember(memberValue)
-                }
-            };
-
-            abstract fun supportsPatchOperation(operation: PatchOperation): Boolean
-            abstract fun mapToObjectModification(contributor: Member, operation: PatchOperation, objectMapper: ObjectMapper): ClubModification<out Any>
+enum class SupportedPatchOperations(val op: PatchOperationSpec) {
+    REMOVE(object : PatchOperationSpec() {
+        override fun supportsPatchOperation(operation: PatchOperation): Boolean = operation.op == "remove" && operation.path == "/members/-"
+        override fun mapToObjectModification(requestingContributor: RequestingContributor, operation: PatchOperation, objectMapper: ObjectMapper): ClubModification<Member> {//DomainObjectModification<out Any, out Any> {
+            var memberValue = operation?.let { objectMapper.treeToValue(operation.value, Member::class.java) } ?: Member(requestingContributor.id, emptyList(), emptyMap(), requestingContributor.isProjectAdmin)
+            return RemoveMember(memberValue)
         }
-    }
+    }),
+    ADD(object : PatchOperationSpec() {
+        override fun supportsPatchOperation(operation: PatchOperation): Boolean = operation.op == "add" && operation.path == "/members/-"
+        override fun mapToObjectModification(requestingContributor: RequestingContributor, operation: PatchOperation, objectMapper: ObjectMapper): ClubModification<Member> {
+            var memberValue = operation?.let { objectMapper.treeToValue(operation.value, Member::class.java) } ?: Member(requestingContributor.id, emptyList(), emptyMap(), requestingContributor.isProjectAdmin)
+            return AddMember(memberValue)
+        }
+    });
 }
 
-val supportedOperations: List<PatchOperationSpec<out Any>> = listOf(PatchOperationSpec(
-        { operation -> operation.op == "remove" && operation.path == "/members/-" },
-        { operation, objectMapper ->
-            var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-            RemoveMember(memberValue)
-        }))
+//val supportedOperations: List<PatchOperationSpec<out Any>> = listOf(PatchOperationSpec(
+//        { operation -> operation.op == "remove" && operation.path == "/members/-" },
+//        { operation, objectMapper ->
+//            var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
+//            RemoveMember(memberValue)
+//        }))

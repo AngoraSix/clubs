@@ -10,11 +10,11 @@ import com.angorasix.clubs.infrastructure.presentation.error.resolveBadRequest
 import com.angorasix.clubs.infrastructure.presentation.error.resolveExceptionResponse
 import com.angorasix.clubs.infrastructure.presentation.error.resolveNotFound
 import com.angorasix.clubs.infrastructure.presentation.rest.patch.Patch
-import com.angorasix.clubs.infrastructure.presentation.rest.patch.PatchOperation
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
-import com.angorasix.clubs.presentation.dto.PatchOperationSpec
+import com.angorasix.clubs.presentation.dto.SupportedPatchOperations
+import com.angorasix.commons.domain.RequestingContributor
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.flow.map
 import org.springframework.hateoas.Link
@@ -60,7 +60,7 @@ class ClubHandler(private val service: ClubService, private val apiConfigs: ApiC
         val contributor = request.attributes()[apiConfigs.headers.contributor]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        return service.findWellKnownClubForContributor(contributor as Member?, type, projectId)?.let {
+        return service.findWellKnownClubForContributor(contributor as RequestingContributor?, type, projectId)?.let {
             val outputClub = it.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
             ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(outputClub)
         } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
@@ -77,10 +77,11 @@ class ClubHandler(private val service: ClubService, private val apiConfigs: ApiC
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         val patch = request.awaitBody(Patch::class)
-        return if (contributor is Member) {
+        return if (contributor is RequestingContributor) {
             try {
-                val modifyOperations = patch.operations.map { it.convertToDomainModification(contributor, objectMapper) }
-                service.modifyWellKnownClub(contributor, type, projectId, modifyOperations)?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)?.let {
+                val modifyOperations = patch.operations.map { it.toDomainObjectModification(contributor, SupportedPatchOperations.values().map { it.op }.toList(), objectMapper) }
+                val modifyClubOperations: List<ClubModification<Any>> = modifyOperations.filterIsInstance<ClubModification<Any>>()
+                service.modifyWellKnownClub(contributor, type, projectId, modifyClubOperations)?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)?.let {
                     ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(it)
                 } ?: resolveNotFound("Can't patch this Well-Known Club", "Well-known Club")
             } catch (ex: Exception) {
@@ -106,23 +107,23 @@ private fun Club.convertToDto(): ClubDto {
     return ClubDto(id, name, type, description, projectId, members.map { it.convertToDto() }.toMutableSet(), open, public, social, createdAt)
 }
 
-private fun Club.convertToDto(contributor: Member?, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
-    val showAllData = isVisibleToMember(contributor)
+private fun Club.convertToDto(contributor: RequestingContributor?, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
+    val showAllData = isVisibleToContributor(contributor)
     return ClubDto(id,
             name,
             type,
             description,
             projectId,
             if (showAllData) members.map { it.convertToDto() }.toMutableSet()
-            else members.filter { it.contributorId == contributor?.contributorId }.map { it.convertToDto() }.toMutableSet(),
+            else members.filter { it.contributorId == contributor?.id }.map { it.convertToDto() }.toMutableSet(),
             if (showAllData) open else null,
             if (showAllData) public else null,
             if (showAllData) social else null,
             if (showAllData) createdAt else null)
-            .resolveHypermedia(contributor, this, apiConfigs, wellKnownClubConfigurations, request)
+            .resolveHypermedia(contributor?.convertToMember(), this, apiConfigs, wellKnownClubConfigurations, request)
 }
 
-private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
+private fun ClubDto.resolveHypermedia(member: Member?, club: Club, apiConfigs: ApiConfigs, wellKnownClubConfigurations: WellKnownClubConfigurations, request: ServerRequest): ClubDto {
     val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
     // self
     val selfLink = Link.of(uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString()).withRel(wellKnownGetSingleRoute.name).expand(projectId, type).withSelfRel()
@@ -130,13 +131,13 @@ private fun ClubDto.resolveHypermedia(contributor: Member?, club: Club, apiConfi
     add(selfLinkWithDefaultAffordance)
 
     // add member
-    if (contributor != null) {
-        if (club.canAddMember(contributor)) {
+    if (member != null) {
+        if (club.canAddMember(member)) {
             val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
             val addMemberLink = Link.of(uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build().toUriString()).withTitle(wellKnownAddMemberRoute.name).withName(wellKnownAddMemberRoute.name).withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
             val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST).withInput(wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java).withName(wellKnownAddMemberRoute.name).toLink()
             add(addMemberAffordanceLink)
-        } else if (club.canRemoveMember(contributor)) {
+        } else if (club.canRemoveMember(member)) {
             val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownRemoveMember
             val removeMemberLink = Link.of(uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build().toUriString()).withTitle(wellKnownRemoveMemberRoute.name).withName(wellKnownRemoveMemberRoute.name).withRel(wellKnownRemoveMemberRoute.name).expand(projectId, type)
             val removeMemberAffordanceLink = Affordances.of(removeMemberLink).afford(HttpMethod.POST).withName(wellKnownRemoveMemberRoute.name).toLink()
@@ -155,8 +156,12 @@ private fun ClubDto.convertToDomain(): Club {
     return Club(id, name ?: throw IllegalArgumentException("Club name expected"), type, description ?: throw IllegalArgumentException("Club description expected"), projectId, members.map { it.convertToModel() }.toMutableSet(), open ?: throw IllegalArgumentException("Club open param expected"), public ?: throw IllegalArgumentException("Club public param expected"), social ?: throw IllegalArgumentException("Club social param expected"), createdAt ?: throw IllegalArgumentException("Club createdAt expected"))
 }
 
-private fun PatchOperation.convertToDomainModification(contributor: Member, objectMapper: ObjectMapper): ClubModification<out Any> {
-    return PatchOperationSpec.Companion.SupportedOperations.values().find { it.supportsPatchOperation(this) }?.let { it.mapToObjectModification(contributor, this, objectMapper) } ?: throw IllegalArgumentException("Patch Operation not supported")
+//private fun PatchOperation.convertToDomainModification(contributor: Member, objectMapper: ObjectMapper): ClubModification<out Any> {
+//    return PatchOperationSpec.Companion.SupportedOperations.values().find { it.supportsPatchOperation(this) }?.let { it.mapToObjectModification(contributor, this, objectMapper) } ?: throw IllegalArgumentException("Patch Operation not supported")
+//}
+
+private fun RequestingContributor.convertToMember(): Member {
+    return Member(id, emptyList(), emptyMap(), isProjectAdmin)
 }
 
 private fun Member.convertToDto(): MemberDto {
