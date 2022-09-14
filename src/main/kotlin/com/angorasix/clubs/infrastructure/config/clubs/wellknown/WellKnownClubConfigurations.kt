@@ -1,6 +1,5 @@
 package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.context.annotation.Configuration
@@ -18,19 +17,25 @@ class WellKnownClubConfigurations {
 
 }
 
-class Clubs @ConstructorBinding constructor(wellKnownClubTypes: Map<String, String>, wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>) {
-    private val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> = mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
+class Clubs @ConstructorBinding constructor(
+    wellKnownClubTypes: Map<String, String>,
+    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>
+) {
+    private val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> =
+        mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
 
     var wellKnownClubTypes = wellKnownClubTypes
-    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> = wellKnownClubDescriptions.map { WellKnownClubDescription(it, typeToRequirement[it.type]!! ) }.associateBy {
-        it.type
-    } as MutableMap<String, WellKnownClubDescription>
+    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
+        wellKnownClubDescriptions.map { WellKnownClubDescription(it, typeToRequirement[it.type]!!) }
+            .associateBy {
+                it.type
+            } as MutableMap<String, WellKnownClubDescription>
 
 }
 
 class WellKnownClubDescription constructor(
-        rawDescription: RawWellKnownClubDescription,
-        mappedRequirements: Class<out DescriptionRequirements>
+    rawDescription: RawWellKnownClubDescription,
+    mappedRequirements: Class<out DescriptionRequirements>
 ) {
     var type: String
     var description: String
@@ -50,11 +55,11 @@ class WellKnownClubDescription constructor(
 }
 
 class RawWellKnownClubDescription constructor(
-        var type: String,
-        var description: String,
-        var open: Boolean,
-        var public: Boolean,
-        var social: Boolean,
+    var type: String,
+    var description: String,
+    var open: Boolean,
+    var public: Boolean,
+    var social: Boolean,
 )
 
 interface DescriptionRequirements

@@ -1,4 +1,4 @@
-package com.angorasix.clubs.infrastructure.config
+package com.angorasix.clubs.infrastructure.config.api
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
@@ -18,23 +18,25 @@ class ApiConfigs {
     lateinit var headers: HeadersConfigs
     lateinit var routes: RoutesConfigs
     lateinit var basePaths: BasePathConfigs
-
 }
 
+class HeadersConfigs @ConstructorBinding constructor(val contributor: String)
 
-class HeadersConfigs @ConstructorBinding constructor(val contributor: String) {
-}
+class BasePathConfigs @ConstructorBinding constructor(val clubs: String, val wellKnown: String)
 
-class BasePathConfigs @ConstructorBinding constructor(val clubs: String, val wellKnown: String) {
-}
+class RoutesConfigs @ConstructorBinding constructor(
+    val wellKnownGetSingle: Route,
+    val wellKnownPatch: Route,
+    val wellKnownAddMember: Route,
+    val wellKnownRemoveMember: Route
+)
 
-class RoutesConfigs @ConstructorBinding constructor(val wellKnownGetSingle: Route,
-                                                    val wellKnownPatch: Route,
-                                                    val wellKnownAddMember: Route,
-                                                    val wellKnownRemoveMember: Route) {
-}
-
-data class Route(val name: String, val basePaths: List<String>, val method: HttpMethod, val path: String) {
+data class Route(
+    val name: String,
+    val basePaths: List<String>,
+    val method: HttpMethod,
+    val path: String
+) {
 
     fun resolvePath(): String = basePaths.joinToString("").plus(path)
 }
