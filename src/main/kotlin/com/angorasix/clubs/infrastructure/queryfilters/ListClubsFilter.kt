@@ -7,7 +7,7 @@ package com.angorasix.clubs.infrastructure.queryfilters
  * @author rozagerardo
  */
 data class ListClubsFilter(
-        val projectId: String? = null,
-        val type: String? = null,
-        val contributorId: String? = null
+    val projectId: String? = null,
+    val type: String? = null,
+    val contributorId: String? = null
 )

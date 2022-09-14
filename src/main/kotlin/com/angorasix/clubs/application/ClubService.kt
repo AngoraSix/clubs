@@ -16,7 +16,10 @@ import reactor.core.publisher.Flux
  *
  * @author rozagerardo
  */
-class ClubService(private val repository: ClubRepository, private val wellKnownClubConfigurations: WellKnownClubConfigurations) {
+class ClubService(
+    private val repository: ClubRepository,
+    private val wellKnownClubConfigurations: WellKnownClubConfigurations
+) {
 
     /**
      * Method to retrieve a collection of [Club]s.
@@ -26,69 +29,97 @@ class ClubService(private val repository: ClubRepository, private val wellKnownC
     fun findClubs(filter: ListClubsFilter): Flow<Club> = repository.findUsingFilter(filter)
 
     /**
-     * Method to add a member to a [Club]. If the club is a well-known club, then it will be created before adding the member.
+     * Method to add a member to a [Club].
+     * If the club is a well-known club, then it will be created before adding the member.
      *
      */
-    suspend fun modifyWellKnownClub(requestingContributor: RequestingContributor, type: String, projectId: String?, modificationOperations: List<ClubModification<out Any>>): Club? {
-        val club = (repository.findByTypeAndProjectId(type, projectId)
-                ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
-                        ?.let { ClubFactory.fromDescription(it, projectId) })
-        val updatedClub = club?.let { modificationOperations.fold(it) { accumulatedClub, op -> op.modify(requestingContributor, accumulatedClub) } }
+    suspend fun modifyWellKnownClub(
+        requestingContributor: RequestingContributor,
+        type: String,
+        projectId: String?,
+        modificationOperations: List<ClubModification<out Any>>
+    ): Club? {
+        val club = repository.findByTypeAndProjectId(type, projectId)
+            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
+                ?.let { ClubFactory.fromDescription(it, projectId) }
+        val updatedClub = club?.let {
+            modificationOperations.fold(it) { accumulatedClub, op ->
+                op.modify(
+                    requestingContributor,
+                    accumulatedClub
+                )
+            }
+        }
         return updatedClub?.let { repository.save(updatedClub) }
     }
 
     /**
-     * Method to add a member to a [Club]. If the club is a well-known club, then it will be created before adding the member.
+     * Method to add a member to a [Club].
+     * If the club is a well-known club, then it will be created before adding the member.
      *
      */
-    suspend fun updateWellKnownClub(member: Member, type: String, projectId: String?, updatedClub: Club): Club? {
+    suspend fun updateWellKnownClub(
+        member: Member,
+        type: String,
+        projectId: String?,
+        updatedClub: Club
+    ): Club? {
         var club = repository.findByTypeAndProjectId(type, projectId)
-                ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
-                        ?.let { ClubFactory.fromDescription(it, projectId) }
+            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
+                ?.let { ClubFactory.fromDescription(it, projectId) }
         return club?.update(member, updatedClub)?.let {
             repository.save(it)
         }
     }
 
     /**
-     * Method to get a single Well-Known [Club] from a type and projectId.
-     *
-     */
-    suspend fun findWellKnownClubForContributor(contributor: RequestingContributor?, type: String, projectId: String): Club? =
-            getWellKnownClub(type, projectId)//.takeIf { it?.isVisibleToContributor(contributor) == true }
-
-    /**
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.
      *
      */
-    private suspend fun getWellKnownClub(type: String, projectId: String): Club? =
-            if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type))
-                repository.findByTypeAndProjectId(type, projectId)
-            else
-                null
-
+    suspend fun getWellKnownClub(type: String, projectId: String): Club? =
+        if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type))
+            repository.findByTypeAndProjectId(type, projectId)
+        else
+            null
 }
 
-private fun Club.update(updatingMember: Member, updatedData: Club, wellKnown: Boolean = true): Club {
+private fun Club.update(
+    updatingMember: Member,
+    updatedData: Club,
+    wellKnown: Boolean = true
+): Club {
     if (!wellKnown && updatingMember.isProjectAdmin) {
         name = updatedData.name
         description = updatedData.description
     }
     members = checkedUpdatedMembers(updatingMember, members, updatedData.members)
-    return this;
+    return this
 }
 
-private fun checkedUpdatedMembers(updatingMember: Member, originalMembers: MutableSet<Member>, updatedMembers: MutableSet<Member>): MutableSet<Member> {
+private fun checkedUpdatedMembers(
+    updatingMember: Member,
+    originalMembers: MutableSet<Member>,
+    updatedMembers: MutableSet<Member>
+): MutableSet<Member> {
     if (updatingMember.isProjectAdmin) return updatedMembers
     return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers))
-    // @TODO: depurate members to avoid adding member with non-allowed roles and clean up data to allow only well-known data
+    // @to-do:
+    // depurate members to avoid adding member with non-allowed roles
+    // and clean up data to allow only well-known data
         updatedMembers
     else
         originalMembers
 }
 
-private fun isModifyingUpdatingMember(updatingMember: Member, originalMembers: MutableSet<Member>, updatedMembers: MutableSet<Member>): Boolean {
+private fun isModifyingUpdatingMember(
+    updatingMember: Member,
+    originalMembers: MutableSet<Member>,
+    updatedMembers: MutableSet<Member>
+): Boolean {
     val diff1 = originalMembers.minus(updatedMembers)
     val diff2 = updatedMembers.minus(originalMembers)
-    return ((diff1.size == 1) xor (diff2.size == 1) && (diff1.contains(updatingMember) || diff2.contains(updatingMember)))
+
+    val bothHaveJustOneUpdatedMemeber = (diff1.size == 1) xor (diff2.size == 1)
+    return bothHaveJustOneUpdatedMemeber &&
+        (diff1.contains(updatingMember) || diff2.contains(updatingMember))
 }

@@ -7,7 +7,7 @@ import org.springframework.data.convert.WritingConverter
 import org.springframework.stereotype.Component
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Date
+import java.util.*
 
 /**
  * Converter to convert between ZonedDateTime and Mongodb's Document.

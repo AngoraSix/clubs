@@ -3,6 +3,7 @@ package com.angorasix.clubs.domain.club.modification
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.modification.DomainObjectModification
 
 /**
  * <p>
@@ -13,17 +14,19 @@ import com.angorasix.commons.domain.RequestingContributor
 abstract class ClubModification<U>(modifyValue: U) : DomainObjectModification<Club, U>(modifyValue)
 
 class AddMember(member: Member) : ClubModification<Member>(member) {
-    override fun modify(updatingContributor: RequestingContributor, club: Club): Club {
-        if ((!updatingContributor.isProjectAdmin).and(updatingContributor.id != modifyValue.contributorId)) throw IllegalArgumentException("Can't add this member")
-        club.addMember(modifyValue)
-        return club
+    override fun modify(requestingContributor: RequestingContributor, domainObject: Club): Club {
+        require((!requestingContributor.isProjectAdmin).and(requestingContributor.id != modifyValue.contributorId))
+        { "Can't add this member" }
+        domainObject.addMember(modifyValue)
+        return domainObject
     }
 }
 
 class RemoveMember(member: Member) : ClubModification<Member>(member) {
-    override fun modify(updatingContributor: RequestingContributor, club: Club): Club {
-        if ((!updatingContributor.isProjectAdmin).and(updatingContributor.id != modifyValue.contributorId)) throw IllegalArgumentException("Can't remove this member")
-        club.removeMember(modifyValue)
-        return club
+    override fun modify(requestingContributor: RequestingContributor, domainObject: Club): Club {
+        require((!requestingContributor.isProjectAdmin).and(requestingContributor.id != modifyValue.contributorId))
+        { "Can't remove this member" }
+        domainObject.removeMember(modifyValue)
+        return domainObject
     }
 }
