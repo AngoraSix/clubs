@@ -2,7 +2,8 @@ package com.angorasix.clubs.presentation.router
 
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.presentation.handler.ClubHandler
-import com.angorasix.commons.presentation.filter.resolveRequestingContributor
+import com.angorasix.commons.presentation.filter.checkRequestingContributor
+import com.angorasix.commons.presentation.filter.extractRequestingContributor
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.web.reactive.function.server.coRouter
 
@@ -25,28 +26,26 @@ class ClubRouter(
      */
     fun clubRouterFunction() = coRouter {
         apiConfigs.basePaths.clubs.nest {
+            filter { request, next ->
+                extractRequestingContributor(
+                    request,
+                    next,
+                    apiConfigs.headers.contributor,
+                    objectMapper
+                )
+            }
             apiConfigs.basePaths.wellKnown.nest {
                 path(apiConfigs.routes.wellKnownPatch.path).nest {
                     filter { request, next ->
-                        resolveRequestingContributor(
+                        checkRequestingContributor(
                             request,
                             next,
                             apiConfigs.headers.contributor,
-                            objectMapper
                         )
                     }
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
                 path(apiConfigs.routes.wellKnownGetSingle.path).nest {
-                    filter { request, next ->
-                        resolveRequestingContributor(
-                            request,
-                            next,
-                            apiConfigs.headers.contributor,
-                            objectMapper,
-                            true
-                        )
-                    }
                     method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
                 }
             }
