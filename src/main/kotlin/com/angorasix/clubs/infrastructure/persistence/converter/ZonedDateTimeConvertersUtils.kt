@@ -7,7 +7,7 @@ import org.springframework.data.convert.WritingConverter
 import org.springframework.stereotype.Component
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.*
+import java.util.Date
 
 /**
  * Converter to convert between ZonedDateTime and Mongodb's Document.
@@ -27,7 +27,7 @@ object ZonedDateTimeConvertersUtils {
             val zone = ZoneId.of(zoneId)
             return ZonedDateTime.ofInstant(
                 dateTime.toInstant(),
-                zone
+                zone,
             )
         }
     }

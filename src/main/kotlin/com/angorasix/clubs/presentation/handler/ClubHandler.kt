@@ -38,7 +38,7 @@ class ClubHandler(
     private val service: ClubService,
     private val apiConfigs: ApiConfigs,
     private val wellKnownClubConfigurations: WellKnownClubConfigurations,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
 
     /**
@@ -69,7 +69,7 @@ class ClubHandler(
                 contributor as? RequestingContributor,
                 apiConfigs,
                 wellKnownClubConfigurations,
-                request
+                request,
             )
             ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(outputClub)
         } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
@@ -92,7 +92,7 @@ class ClubHandler(
                     it.toDomainObjectModification(
                         contributor,
                         SupportedPatchOperations.values().map { it.op }.toList(),
-                        objectMapper
+                        objectMapper,
                     )
                 }
                 val modifyClubOperations: List<ClubModification<Any>> =
@@ -123,7 +123,7 @@ private fun Club.convertToDto(): ClubDto {
         open,
         public,
         social,
-        createdAt
+        createdAt,
     )
 }
 
@@ -131,7 +131,7 @@ private fun Club.convertToDto(
     contributor: RequestingContributor?,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
-    request: ServerRequest
+    request: ServerRequest,
 ): ClubDto {
     val showAllData = isVisibleToContributor(contributor)
     return ClubDto(
@@ -146,14 +146,14 @@ private fun Club.convertToDto(
         if (showAllData) open else null,
         if (showAllData) public else null,
         if (showAllData) social else null,
-        if (showAllData) createdAt else null
+        if (showAllData) createdAt else null,
     )
         .resolveHypermedia(
             contributor?.convertToMember(),
             this,
             apiConfigs,
             wellKnownClubConfigurations,
-            request
+            request,
         )
 }
 
@@ -162,12 +162,12 @@ private fun ClubDto.resolveHypermedia(
     club: Club,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
-    request: ServerRequest
+    request: ServerRequest,
 ): ClubDto {
     val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
     // self
     val selfLink = Link.of(
-        uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString()
+        uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString(),
     ).withRel(wellKnownGetSingleRoute.name).expand(projectId, type).withSelfRel()
     val selfLinkWithDefaultAffordance =
         Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
@@ -179,20 +179,20 @@ private fun ClubDto.resolveHypermedia(
             val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
             val addMemberLink = Link.of(
                 uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
-                    .toUriString()
+                    .toUriString(),
             ).withTitle(wellKnownAddMemberRoute.name).withName(wellKnownAddMemberRoute.name)
                 .withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
             val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST)
                 .withInput(
                     wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements
-                        ?: Void::class.java
+                        ?: Void::class.java,
                 ).withName(wellKnownAddMemberRoute.name).toLink()
             add(addMemberAffordanceLink)
         } else if (club.canRemoveMember(member)) {
             val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownRemoveMember
             val removeMemberLink = Link.of(
                 uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build()
-                    .toUriString()
+                    .toUriString(),
             ).withTitle(wellKnownRemoveMemberRoute.name).withName(wellKnownRemoveMemberRoute.name)
                 .withRel(wellKnownRemoveMemberRoute.name).expand(projectId, type)
             val removeMemberAffordanceLink =

@@ -12,7 +12,7 @@ object ClubFactory {
 
     fun fromDescription(
         clubDescription: WellKnownClubDescription,
-        projectId: String?
+        projectId: String?,
     ): Club {
         return Club(
             "$projectId-${clubDescription.type}",
@@ -22,7 +22,7 @@ object ClubFactory {
             mutableSetOf(),
             clubDescription.open,
             clubDescription.public,
-            clubDescription.social
+            clubDescription.social,
         )
     }
 }

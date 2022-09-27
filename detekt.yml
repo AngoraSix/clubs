@@ -1,3 +1,10 @@
+#empty-blocks:
+#  EmptyFunctionBlock:
+#    excludes: ['**/*ApplicationTest.kt']
+#
+#performance:
+#  SpreadOperator:
+#    excludes: ['**/ProjectsCoreApplication.kt', '**/test/**DocsIntegrationTest.kt']
 build:
   maxIssues: 0
   excludeCorrectable: false
@@ -127,6 +134,7 @@ complexity:
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: [ ]
+    excludes: [ '**/configurationproperty/**.kt' ]
   MethodOverloading:
     active: false
     threshold: 6
@@ -273,7 +281,7 @@ exceptions:
     active: true
   TooGenericExceptionCaught:
     active: true
-    excludes: [ '**/ClubHandler.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**' ]
+    excludes: [ '**/presentation/handler/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**' ]
     exceptionNames:
       - 'ArrayIndexOutOfBoundsException'
       - 'Error'
@@ -649,7 +657,7 @@ style:
     allowNonStandardGrouping: false
   UnnecessaryAbstractClass:
     active: true
-    excludes: [ '**/ClubModification.kt' ] # @TODO: remove this, it's a false positive - related (doesn't solve this case): https://github.com/detekt/detekt/issues/4626
+    excludes: [ '**/ClubModification.kt' ]
   UnnecessaryAnnotationUseSiteTarget:
     active: false
   UnnecessaryApply:

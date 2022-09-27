@@ -18,7 +18,7 @@ import reactor.core.publisher.Flux
  */
 class ClubService(
     private val repository: ClubRepository,
-    private val wellKnownClubConfigurations: WellKnownClubConfigurations
+    private val wellKnownClubConfigurations: WellKnownClubConfigurations,
 ) {
 
     /**
@@ -37,16 +37,20 @@ class ClubService(
         requestingContributor: RequestingContributor,
         type: String,
         projectId: String?,
-        modificationOperations: List<ClubModification<out Any>>
+        modificationOperations: List<ClubModification<out Any>>,
     ): Club? {
         val club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
-                ?.let { ClubFactory.fromDescription(it, projectId) }
+            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+                ClubFactory.fromDescription(
+                    it,
+                    projectId,
+                )
+            }
         val updatedClub = club?.let {
             modificationOperations.fold(it) { accumulatedClub, op ->
                 op.modify(
                     requestingContributor,
-                    accumulatedClub
+                    accumulatedClub,
                 )
             }
         }
@@ -62,11 +66,15 @@ class ClubService(
         member: Member,
         type: String,
         projectId: String?,
-        updatedClub: Club
+        updatedClub: Club,
     ): Club? {
         var club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]
-                ?.let { ClubFactory.fromDescription(it, projectId) }
+            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+                ClubFactory.fromDescription(
+                    it,
+                    projectId,
+                )
+            }
         return club?.update(member, updatedClub)?.let {
             repository.save(it)
         }
@@ -77,16 +85,17 @@ class ClubService(
      *
      */
     suspend fun getWellKnownClub(type: String, projectId: String): Club? =
-        if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type))
-            repository.findByTypeAndProjectId(type, projectId)
-        else
-            null
+        if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type)) repository.findByTypeAndProjectId(
+            type,
+            projectId,
+        )
+        else null
 }
 
 private fun Club.update(
     updatingMember: Member,
     updatedData: Club,
-    wellKnown: Boolean = true
+    wellKnown: Boolean = true,
 ): Club {
     if (!wellKnown && updatingMember.isProjectAdmin) {
         name = updatedData.name
@@ -99,7 +108,7 @@ private fun Club.update(
 private fun checkedUpdatedMembers(
     updatingMember: Member,
     originalMembers: MutableSet<Member>,
-    updatedMembers: MutableSet<Member>
+    updatedMembers: MutableSet<Member>,
 ): MutableSet<Member> {
     if (updatingMember.isProjectAdmin) return updatedMembers
     return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers))
@@ -107,19 +116,28 @@ private fun checkedUpdatedMembers(
     // depurate members to avoid adding member with non-allowed roles
     // and clean up data to allow only well-known data
         updatedMembers
-    else
-        originalMembers
+    else originalMembers
 }
 
 private fun isModifyingUpdatingMember(
     updatingMember: Member,
     originalMembers: MutableSet<Member>,
-    updatedMembers: MutableSet<Member>
+    updatedMembers: MutableSet<Member>,
 ): Boolean {
     val diff1 = originalMembers.minus(updatedMembers)
     val diff2 = updatedMembers.minus(originalMembers)
 
-    val bothHaveJustOneUpdatedMemeber = (diff1.size == 1) xor (diff2.size == 1)
-    return bothHaveJustOneUpdatedMemeber &&
-        (diff1.contains(updatingMember) || diff2.contains(updatingMember))
+    val bothHaveJustOneUpdatedMember =
+        { set1: Set<Member>, set2: Set<Member> -> (set1.size == 1) xor (set2.size == 1) }
+    val anyContainsUpdatingMember =
+        { set1: Set<Member>, set2: Set<Member>, member: Member ->
+            set1.contains(updatingMember) || set2.contains(
+                member,
+            )
+        }
+    return bothHaveJustOneUpdatedMember(diff1, diff2) && anyContainsUpdatingMember(
+        diff1,
+        diff2,
+        updatingMember,
+    )
 }
