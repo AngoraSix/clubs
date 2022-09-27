@@ -14,12 +14,11 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "configs")
 class WellKnownClubConfigurations {
     lateinit var clubs: Clubs
-
 }
 
 class Clubs @ConstructorBinding constructor(
     wellKnownClubTypes: Map<String, String>,
-    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>
+    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
 ) {
     private val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> =
         mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
@@ -30,12 +29,11 @@ class Clubs @ConstructorBinding constructor(
             .associateBy {
                 it.type
             } as MutableMap<String, WellKnownClubDescription>
-
 }
 
 class WellKnownClubDescription constructor(
     rawDescription: RawWellKnownClubDescription,
-    mappedRequirements: Class<out DescriptionRequirements>
+    mappedRequirements: Class<out DescriptionRequirements>,
 ) {
     var type: String
     var description: String

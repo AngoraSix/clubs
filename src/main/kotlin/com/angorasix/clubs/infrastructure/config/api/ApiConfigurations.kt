@@ -28,14 +28,14 @@ class RoutesConfigs @ConstructorBinding constructor(
     val wellKnownGetSingle: Route,
     val wellKnownPatch: Route,
     val wellKnownAddMember: Route,
-    val wellKnownRemoveMember: Route
+    val wellKnownRemoveMember: Route,
 )
 
 data class Route(
     val name: String,
     val basePaths: List<String>,
     val method: HttpMethod,
-    val path: String
+    val path: String,
 ) {
 
     fun resolvePath(): String = basePaths.joinToString("").plus(path)

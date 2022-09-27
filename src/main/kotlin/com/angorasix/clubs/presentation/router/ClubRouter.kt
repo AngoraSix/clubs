@@ -16,7 +16,7 @@ import org.springframework.web.reactive.function.server.coRouter
 class ClubRouter(
     private val handler: ClubHandler,
     private val objectMapper: ObjectMapper,
-    private val apiConfigs: ApiConfigs
+    private val apiConfigs: ApiConfigs,
 ) {
 
     /**
@@ -31,7 +31,7 @@ class ClubRouter(
                     request,
                     next,
                     apiConfigs.headers.contributor,
-                    objectMapper
+                    objectMapper,
                 )
             }
             apiConfigs.basePaths.wellKnown.nest {

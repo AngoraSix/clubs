@@ -9,5 +9,5 @@ package com.angorasix.clubs.infrastructure.queryfilters
 data class ListClubsFilter(
     val projectId: String? = null,
     val type: String? = null,
-    val contributorId: String? = null
+    val contributorId: String? = null,
 )

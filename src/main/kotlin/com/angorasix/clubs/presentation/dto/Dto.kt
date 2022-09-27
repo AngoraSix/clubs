@@ -19,7 +19,7 @@ import java.time.ZonedDateTime
 data class MemberDto(
     var contributorId: String? = null,
     var roles: Collection<String> = mutableSetOf(),
-    var data: Map<String, Any> = mutableMapOf()
+    var data: Map<String, Any> = mutableMapOf(),
 )
 
 data class ClubDto(
@@ -36,32 +36,36 @@ data class ClubDto(
 ) : RepresentationModel<ClubDto>()
 
 enum class SupportedPatchOperations(val op: PatchOperationSpec) {
-    REMOVE(object : PatchOperationSpec {
-        override fun supportsPatchOperation(operation: PatchOperation): Boolean =
-            operation.op == "remove" && operation.path == "/members/-"
+    REMOVE(
+        object : PatchOperationSpec {
+            override fun supportsPatchOperation(operation: PatchOperation): Boolean =
+                operation.op == "remove" && operation.path == "/members/-"
 
-        override fun mapToObjectModification(
-            contributor: RequestingContributor,
-            operation: PatchOperation,
-            objectMapper: ObjectMapper
-        ): ClubModification<Member> {
-            var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
-            return RemoveMember(memberValue)
-        }
-    }),
-    ADD(object : PatchOperationSpec {
-        override fun supportsPatchOperation(operation: PatchOperation): Boolean =
-            operation.op == "add" && operation.path == "/members/-"
+            override fun mapToObjectModification(
+                contributor: RequestingContributor,
+                operation: PatchOperation,
+                objectMapper: ObjectMapper,
+            ): ClubModification<Member> {
+                var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
+                    ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
+                return RemoveMember(memberValue)
+            }
+        },
+    ),
+    ADD(
+        object : PatchOperationSpec {
+            override fun supportsPatchOperation(operation: PatchOperation): Boolean =
+                operation.op == "add" && operation.path == "/members/-"
 
-        override fun mapToObjectModification(
-            contributor: RequestingContributor,
-            operation: PatchOperation,
-            objectMapper: ObjectMapper
-        ): ClubModification<Member> {
-            var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
-            return AddMember(memberValue)
-        }
-    });
+            override fun mapToObjectModification(
+                contributor: RequestingContributor,
+                operation: PatchOperation,
+                objectMapper: ObjectMapper,
+            ): ClubModification<Member> {
+                var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
+                    ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
+                return AddMember(memberValue)
+            }
+        },
+    );
 }

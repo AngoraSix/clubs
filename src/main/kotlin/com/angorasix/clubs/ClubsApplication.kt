@@ -8,7 +8,7 @@ import org.springframework.hateoas.support.WebStack
 @SpringBootApplication
 @EnableHypermediaSupport(
     type = [EnableHypermediaSupport.HypermediaType.HAL_FORMS],
-    stacks = [WebStack.WEBFLUX]
+    stacks = [WebStack.WEBFLUX],
 )
 class ClubsApplication
 

@@ -15,12 +15,11 @@ data class Member constructor(
     @field:org.springframework.data.annotation.Transient val isProjectAdmin: Boolean = false,
 ) {
 
-
     @PersistenceCreator
     private constructor(
         contributorId: String,
         roles: Collection<String> = mutableSetOf(),
-        data: Map<String, Any> = mutableMapOf()
+        data: Map<String, Any> = mutableMapOf(),
     ) : this(contributorId, roles, data, false)
 
     override fun equals(other: Any?): Boolean =

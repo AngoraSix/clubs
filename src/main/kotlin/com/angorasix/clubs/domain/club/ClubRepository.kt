@@ -4,10 +4,9 @@ import com.angorasix.clubs.infrastructure.persistence.repository.ClubFilterRepos
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.data.repository.kotlin.CoroutineSortingRepository
 
-interface ClubRepository : CoroutineCrudRepository<Club, String>,
+interface ClubRepository :
+    CoroutineCrudRepository<Club, String>,
     CoroutineSortingRepository<Club, String>,
     ClubFilterRepository {
     suspend fun findByTypeAndProjectId(type: String, projectId: String?): Club?
 }
-
-

@@ -50,7 +50,7 @@ data class Club @PersistenceCreator constructor(
         open,
         public,
         social,
-        ZonedDateTime.now(zone)
+        ZonedDateTime.now(zone),
     )
 
     /**
@@ -96,5 +96,4 @@ data class Club @PersistenceCreator constructor(
      */
     fun canRemoveMember(contributor: Member): Boolean =
         open.and(members.contains(contributor)).and(!contributor.isProjectAdmin)
-
 }
