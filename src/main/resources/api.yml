@@ -13,6 +13,13 @@ configs:
           - ${configs.api.basePaths.wellKnown}
         method: GET
         path: "/{projectId}/{type}"
+      wellKnownGetAll:
+        name: clubAll
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: GET
+        path: ""
       wellKnownPatch:
         name: clubPatch
         basePaths:
@@ -20,17 +27,6 @@ configs:
           - ${configs.api.basePaths.wellKnown}
         method: PATCH
         path: "/{projectId}/{type}"
-      wellKnownAddMember:
-        name: addMember
-        basePaths:
-          - ${configs.api.basePaths.clubs}
-          - ${configs.api.basePaths.wellKnown}
-        method: POST
-        path: "/{projectId}/{type}/add-member"
-      wellKnownRemoveMember:
-        name: removeMember
-        basePaths:
-          - ${configs.api.basePaths.clubs}
-          - ${configs.api.basePaths.wellKnown}
-        method: POST
-        path: "/{projectId}/{type}/remove-member"
+    clubActions:
+      addMember: addMember
+      removeMember: removeMember

@@ -23,7 +23,7 @@ class ClubFilterRepositoryImpl(val mongoOps: ReactiveMongoOperations) : ClubFilt
 
 private fun ListClubsFilter.toQuery(): Query {
     val query = Query()
-    projectId?.let { query.addCriteria(where("projectId").`is`(it)) }
+    projectId?.let { query.addCriteria(where("projectId").`in`(it)) }
     contributorId?.let { query.addCriteria(where("members").elemMatch(where("contributorId").`is`(it))) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
     return query
