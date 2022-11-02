@@ -69,10 +69,10 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClubsAll(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[apiConfigs.headers.contributor]
-        return service.findClubs(request.queryParams().toQueryFilter()).map {
+        val requestingContributor = request.attributes()[apiConfigs.headers.contributor]
+        return service.findClubs(request.queryParams().toQueryFilter(), requestingContributor as? RequestingContributor).map {
             it.convertToDto(
-                contributor as? RequestingContributor,
+                requestingContributor as? RequestingContributor,
                 apiConfigs,
                 wellKnownClubConfigurations,
                 request,
