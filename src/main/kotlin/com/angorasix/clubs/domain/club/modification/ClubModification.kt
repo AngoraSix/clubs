@@ -16,8 +16,8 @@ abstract class ClubModification<U>(modifyValue: U) : DomainObjectModification<Cl
 class AddMember(member: Member) : ClubModification<Member>(member) {
     override fun modify(requestingContributor: RequestingContributor, domainObject: Club): Club {
         require(
-            (!requestingContributor.isProjectAdmin)
-                .and(requestingContributor.id != modifyValue.contributorId),
+            (requestingContributor.isProjectAdmin)
+                .or(requestingContributor.id == modifyValue.contributorId),
         ) { "Can't add this member" }
         domainObject.addMember(modifyValue)
         return domainObject
@@ -27,8 +27,8 @@ class AddMember(member: Member) : ClubModification<Member>(member) {
 class RemoveMember(member: Member) : ClubModification<Member>(member) {
     override fun modify(requestingContributor: RequestingContributor, domainObject: Club): Club {
         require(
-            (!requestingContributor.isProjectAdmin)
-                .and(requestingContributor.id != modifyValue.contributorId),
+            (requestingContributor.isProjectAdmin)
+                .or(requestingContributor.id == modifyValue.contributorId),
         ) { "Can't remove this member" }
         domainObject.removeMember(modifyValue)
         return domainObject

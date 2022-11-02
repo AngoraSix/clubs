@@ -42,19 +42,6 @@ class ClubHandler(
 ) {
 
     /**
-     * Handler for the List Clubs endpoint, retrieving a Flux including all persisted Clubs.
-     *
-     * @param request - HTTP `ServerRequest` object
-     * @return the `ServerResponse`
-     */
-    suspend fun listClubs(@Suppress("UNUSED_PARAMETER") request: ServerRequest): ServerResponse {
-        return service.findClubs(request.queryParams().toQueryFilter()).map { it.convertToDto() }
-            .let {
-                ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyAndAwait(it)
-            }
-    }
-
-    /**
      * Handler for the Get Single Club endpoint, retrieving a Mono with the requested Club.
      *
      * @param request - HTTP `ServerRequest` object
@@ -73,6 +60,27 @@ class ClubHandler(
             )
             ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(outputClub)
         } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
+    }
+
+    /**
+     * Handler for the Get All Club endpoint with filters (usually by projectId), retrieving a Flux with all the matching Clubs.
+     *
+     * @param request - HTTP `ServerRequest` object
+     * @return the `ServerResponse`
+     */
+    suspend fun getWellKnownClubsAll(request: ServerRequest): ServerResponse {
+        val requestingContributor = request.attributes()[apiConfigs.headers.contributor]
+        return service.findClubs(request.queryParams().toQueryFilter(), requestingContributor as? RequestingContributor).map {
+            it.convertToDto(
+                requestingContributor as? RequestingContributor,
+                apiConfigs,
+                wellKnownClubConfigurations,
+                request,
+            )
+        }
+            .let {
+                ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyAndAwait(it)
+            }
     }
 
     /**
@@ -176,28 +184,31 @@ private fun ClubDto.resolveHypermedia(
     // add member
     if (member != null) {
         if (club.canAddMember(member)) {
-            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownAddMember
+            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
             val addMemberLink = Link.of(
                 uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
                     .toUriString(),
-            ).withTitle(wellKnownAddMemberRoute.name).withName(wellKnownAddMemberRoute.name)
-                .withRel(wellKnownAddMemberRoute.name).expand(projectId, type)
-            val addMemberAffordanceLink = Affordances.of(addMemberLink).afford(HttpMethod.POST)
-                .withInput(
-                    wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements
-                        ?: Void::class.java,
-                ).withName(wellKnownAddMemberRoute.name).toLink()
+            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
+                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
+            val addMemberAffordanceLink =
+                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
+                    .withInput(
+                        wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements
+                            ?: Void::class.java,
+                    ).withName(wellKnownAddMemberActionName).toLink()
             add(addMemberAffordanceLink)
         } else if (club.canRemoveMember(member)) {
-            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownRemoveMember
+            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownRemoveMemberActionName = apiConfigs.clubActions.removeMember
             val removeMemberLink = Link.of(
                 uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build()
                     .toUriString(),
-            ).withTitle(wellKnownRemoveMemberRoute.name).withName(wellKnownRemoveMemberRoute.name)
-                .withRel(wellKnownRemoveMemberRoute.name).expand(projectId, type)
+            ).withTitle(wellKnownRemoveMemberActionName).withName(wellKnownRemoveMemberActionName)
+                .withRel(wellKnownRemoveMemberActionName).expand(projectId, type)
             val removeMemberAffordanceLink =
-                Affordances.of(removeMemberLink).afford(HttpMethod.POST)
-                    .withName(wellKnownRemoveMemberRoute.name).toLink()
+                Affordances.of(removeMemberLink).afford(wellKnownRemoveMemberRoute.method)
+                    .withName(wellKnownRemoveMemberActionName).toLink()
             add(removeMemberAffordanceLink)
         }
     }
@@ -218,5 +229,9 @@ private fun Member.convertToDto(): MemberDto {
 }
 
 private fun MultiValueMap<String, String>.toQueryFilter(): ListClubsFilter {
-    return ListClubsFilter(getFirst("projectId"), getFirst("type"), getFirst("contributorId"))
+    return ListClubsFilter(
+        getFirst("projectId")?.split(","),
+        getFirst("type"),
+        getFirst("contributorId"),
+    )
 }

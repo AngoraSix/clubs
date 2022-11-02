@@ -41,12 +41,16 @@ class ClubRouter(
                             request,
                             next,
                             apiConfigs.headers.contributor,
+                            true
                         )
                     }
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
                 path(apiConfigs.routes.wellKnownGetSingle.path).nest {
                     method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
+                }
+                path(apiConfigs.routes.wellKnownGetAll.path).nest {
+                    method(apiConfigs.routes.wellKnownGetAll.method, handler::getWellKnownClubsAll)
                 }
             }
         }

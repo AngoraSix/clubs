@@ -18,6 +18,7 @@ class ApiConfigs {
     lateinit var headers: HeadersConfigs
     lateinit var routes: RoutesConfigs
     lateinit var basePaths: BasePathConfigs
+    lateinit var clubActions: ClubActions
 }
 
 class HeadersConfigs @ConstructorBinding constructor(val contributor: String)
@@ -26,9 +27,8 @@ class BasePathConfigs @ConstructorBinding constructor(val clubs: String, val wel
 
 class RoutesConfigs @ConstructorBinding constructor(
     val wellKnownGetSingle: Route,
+    val wellKnownGetAll: Route,
     val wellKnownPatch: Route,
-    val wellKnownAddMember: Route,
-    val wellKnownRemoveMember: Route,
 )
 
 data class Route(
@@ -37,6 +37,7 @@ data class Route(
     val method: HttpMethod,
     val path: String,
 ) {
-
     fun resolvePath(): String = basePaths.joinToString("").plus(path)
 }
+
+class ClubActions @ConstructorBinding constructor(val addMember: String, val removeMember: String)

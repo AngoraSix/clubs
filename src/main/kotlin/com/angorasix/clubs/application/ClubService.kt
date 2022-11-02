@@ -26,7 +26,7 @@ class ClubService(
      *
      * @return [Flux] of [Club]
      */
-    fun findClubs(filter: ListClubsFilter): Flow<Club> = repository.findUsingFilter(filter)
+    fun findClubs(filter: ListClubsFilter, requestingContributor: RequestingContributor?): Flow<Club> = repository.findUsingFilter(filter, requestingContributor)
 
     /**
      * Method to add a member to a [Club].
@@ -88,7 +88,12 @@ class ClubService(
         if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type)) repository.findByTypeAndProjectId(
             type,
             projectId,
-        )
+        ) ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+            ClubFactory.fromDescription(
+                it,
+                projectId,
+            )
+        }
         else null
 }
 
