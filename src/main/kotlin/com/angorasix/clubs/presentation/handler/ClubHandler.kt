@@ -63,14 +63,18 @@ class ClubHandler(
     }
 
     /**
-     * Handler for the Get All Club endpoint with filters (usually by projectId), retrieving a Flux with all the matching Clubs.
+     * Handler for the Get All Club endpoint with filters (usually by projectId),
+     * retrieving a Flux with all the matching Clubs.
      *
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClubsAll(request: ServerRequest): ServerResponse {
         val requestingContributor = request.attributes()[apiConfigs.headers.contributor]
-        return service.findClubs(request.queryParams().toQueryFilter(), requestingContributor as? RequestingContributor).map {
+        return service.findClubs(
+            request.queryParams().toQueryFilter(),
+            requestingContributor as? RequestingContributor,
+        ).map {
             it.convertToDto(
                 requestingContributor as? RequestingContributor,
                 apiConfigs,
