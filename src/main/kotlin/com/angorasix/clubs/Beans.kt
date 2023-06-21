@@ -22,7 +22,7 @@ val beans = beans {
     bean<ClubService>()
     bean<ClubHandler>()
     bean {
-        ClubRouter(ref(), ref(), ref()).clubRouterFunction()
+        ClubRouter(ref(), ref()).clubRouterFunction()
     }
     bean {
         ForwardedHeaderTransformer()

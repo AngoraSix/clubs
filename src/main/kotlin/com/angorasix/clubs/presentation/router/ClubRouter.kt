@@ -2,9 +2,7 @@ package com.angorasix.clubs.presentation.router
 
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.presentation.handler.ClubHandler
-import com.angorasix.commons.presentation.filter.checkRequestingContributor
-import com.angorasix.commons.presentation.filter.extractRequestingContributor
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.angorasix.commons.reactive.presentation.filter.extractRequestingContributor
 import org.springframework.web.reactive.function.server.coRouter
 
 /**
@@ -15,7 +13,6 @@ import org.springframework.web.reactive.function.server.coRouter
  */
 class ClubRouter(
     private val handler: ClubHandler,
-    private val objectMapper: ObjectMapper,
     private val apiConfigs: ApiConfigs,
 ) {
 
@@ -30,20 +27,10 @@ class ClubRouter(
                 extractRequestingContributor(
                     request,
                     next,
-                    apiConfigs.headers.contributor,
-                    objectMapper,
                 )
             }
             apiConfigs.basePaths.wellKnown.nest {
                 path(apiConfigs.routes.wellKnownPatch.path).nest {
-                    filter { request, next ->
-                        checkRequestingContributor(
-                            request,
-                            next,
-                            apiConfigs.headers.contributor,
-                            true
-                        )
-                    }
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
                 path(apiConfigs.routes.wellKnownGetSingle.path).nest {
@@ -51,6 +38,9 @@ class ClubRouter(
                 }
                 path(apiConfigs.routes.wellKnownGetAll.path).nest {
                     method(apiConfigs.routes.wellKnownGetAll.method, handler::getWellKnownClubsAll)
+                }
+                path(apiConfigs.routes.wellKnownRegister.path).nest {
+                    method(apiConfigs.routes.wellKnownRegister.method, handler::registerWellKnownClubs)
                 }
             }
         }

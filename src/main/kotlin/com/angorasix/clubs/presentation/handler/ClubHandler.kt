@@ -10,11 +10,12 @@ import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
 import com.angorasix.clubs.presentation.dto.SupportedPatchOperations
-import com.angorasix.commons.domain.RequestingContributor
-import com.angorasix.commons.infrastructure.presentation.error.resolveBadRequest
-import com.angorasix.commons.infrastructure.presentation.error.resolveExceptionResponse
-import com.angorasix.commons.infrastructure.presentation.error.resolveNotFound
+import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.infrastructure.constants.AngoraSixInfrastructure
 import com.angorasix.commons.presentation.dto.Patch
+import com.angorasix.commons.reactive.presentation.error.resolveBadRequest
+import com.angorasix.commons.reactive.presentation.error.resolveExceptionResponse
+import com.angorasix.commons.reactive.presentation.error.resolveNotFound
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.flow.map
 import org.springframework.hateoas.Link
@@ -42,6 +43,40 @@ class ClubHandler(
 ) {
 
     /**
+     * Handler for the Patch Club endpoint, retrieving a Mono with the requested Club.
+     *
+     * @param request - HTTP `ServerRequest` object
+     * @return the `ServerResponse`
+     */
+    suspend fun registerWellKnownClubs(request: ServerRequest): ServerResponse {
+        val requestingContributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
+        val projectId = request.pathVariable("projectId")
+        return if (requestingContributor is SimpleContributor) {
+            try {
+                val wellKnownClubs =
+                    service.registerAllWellKnownClub(
+                        requestingContributor,
+                        projectId,
+                    ).map {
+                        it?.convertToDto(
+                            requestingContributor,
+                            apiConfigs,
+                            wellKnownClubConfigurations,
+                            request,
+                        )
+                    }
+                return ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                    .bodyValueAndAwait(wellKnownClubs)
+            } catch (ex: RuntimeException) {
+                return resolveExceptionResponse(ex, "Well-Known Club")
+            }
+        } else {
+            resolveBadRequest("Invalid Contributor Authentication", "Contributor Authentication")
+        }
+    }
+
+    /**
      * Handler for the Get Single Club endpoint, retrieving a Mono with the requested Club.
      *
      * @param request - HTTP `ServerRequest` object
@@ -53,7 +88,7 @@ class ClubHandler(
         val type = request.pathVariable("type")
         return service.getWellKnownClub(type, projectId)?.let {
             val outputClub = it.convertToDto(
-                contributor as? RequestingContributor,
+                contributor as? SimpleContributor,
                 apiConfigs,
                 wellKnownClubConfigurations,
                 request,
@@ -73,10 +108,10 @@ class ClubHandler(
         val requestingContributor = request.attributes()[apiConfigs.headers.contributor]
         return service.findClubs(
             request.queryParams().toQueryFilter(),
-            requestingContributor as? RequestingContributor,
+            requestingContributor as? SimpleContributor,
         ).map {
             it.convertToDto(
-                requestingContributor as? RequestingContributor,
+                requestingContributor as? SimpleContributor,
                 apiConfigs,
                 wellKnownClubConfigurations,
                 request,
@@ -98,7 +133,7 @@ class ClubHandler(
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         val patch = request.awaitBody(Patch::class)
-        return if (contributor is RequestingContributor) {
+        return if (contributor is SimpleContributor) {
             try {
                 val modifyOperations = patch.operations.map {
                     it.toDomainObjectModification(
@@ -140,7 +175,7 @@ private fun Club.convertToDto(): ClubDto {
 }
 
 private fun Club.convertToDto(
-    contributor: RequestingContributor?,
+    contributor: SimpleContributor?,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
     request: ServerRequest,
@@ -224,8 +259,8 @@ private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPa
         .replaceQuery("")
 }
 
-private fun RequestingContributor.convertToMember(): Member {
-    return Member(id, emptyList(), emptyMap(), isProjectAdmin)
+private fun SimpleContributor.convertToMember(): Member {
+    return Member(id, emptyList(), emptyMap())
 }
 
 private fun Member.convertToDto(): MemberDto {

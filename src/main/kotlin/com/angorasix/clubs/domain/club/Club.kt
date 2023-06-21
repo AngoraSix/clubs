@@ -1,6 +1,6 @@
 package com.angorasix.clubs.domain.club
 
-import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.SimpleContributor
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import java.time.ZoneId
@@ -20,6 +20,7 @@ data class Club @PersistenceCreator constructor(
     var description: String,
     val projectId: String?,
     var members: MutableSet<Member> = mutableSetOf(),
+    val admins: MutableSet<SimpleContributor> = mutableSetOf(),
     val open: Boolean, // anyone can access without invitation
     val public: Boolean, // visible for the rest
     val social: Boolean, // members can interact / see themselves
@@ -36,6 +37,7 @@ data class Club @PersistenceCreator constructor(
         description: String,
         projectId: String?,
         members: MutableSet<Member> = mutableSetOf(),
+        admins: MutableSet<SimpleContributor> = mutableSetOf(),
         open: Boolean,
         public: Boolean,
         social: Boolean,
@@ -47,11 +49,21 @@ data class Club @PersistenceCreator constructor(
         description,
         projectId,
         members,
+        admins,
         open,
         public,
         social,
         ZonedDateTime.now(zone),
     )
+
+    /**
+     * Register new Club, setting it up appropiately.
+     *
+     * @param requestingContributor - contributor to be added to the 'admins' set
+     */
+    fun register(requestingContributor: SimpleContributor) {
+        admins.add(requestingContributor)
+    }
 
     /**
      * Add a single member to the set.
@@ -77,9 +89,9 @@ data class Club @PersistenceCreator constructor(
      *
      * @param requestingContributor - contributor trying to see the Club.
      */
-    fun isVisibleToContributor(requestingContributor: RequestingContributor?): Boolean = public
+    fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean = public
         .or(social.and(members.any { it.contributorId == requestingContributor?.id }))
-        .or(requestingContributor?.isProjectAdmin ?: false)
+        .or(isAdmin(requestingContributor?.id))
 
     /**
      * Checks whether a particular contributor can be added as a member of this Club.
@@ -87,7 +99,8 @@ data class Club @PersistenceCreator constructor(
      * @param contributor - contributor candidate to join the Club.
      */
     fun canAddMember(contributor: Member): Boolean =
-        open.and(!members.contains(contributor)).and(!contributor.isProjectAdmin)
+        open.and(!members.contains(contributor))
+            .and(!isAdmin(contributor.contributorId))
 
     /**
      * Checks whether a particular contributor can be removed as a member of this Club.
@@ -95,5 +108,14 @@ data class Club @PersistenceCreator constructor(
      * @param contributor - contributor candidate to leave the Club.
      */
     fun canRemoveMember(contributor: Member): Boolean =
-        open.and(members.contains(contributor)).and(!contributor.isProjectAdmin)
+        open.and(members.contains(contributor))
+            .and(!isAdmin(contributor.contributorId))
+
+    /**
+     * Checks whether a particular contributor is Admin of this Club.
+     *
+     * @param contributor - contributor candidate to check.
+     */
+    fun isAdmin(contributorId: String?): Boolean =
+        (contributorId != null).and(admins.any { it.id == contributorId })
 }

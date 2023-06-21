@@ -6,7 +6,7 @@ server:
 
 spring:
   config:
-    import: classpath:/wellknownclubs.yml, classpath:/api.yml
+    import: classpath:/wellknown.yml, classpath:/api.yml
   application:
     name: ${A6_CLUBS_APP_NAME:clubs}
   data:

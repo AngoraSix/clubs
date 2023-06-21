@@ -4,7 +4,7 @@ import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.domain.club.modification.AddMember
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.domain.club.modification.RemoveMember
-import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.SimpleContributor
 import com.angorasix.commons.presentation.dto.PatchOperation
 import com.angorasix.commons.presentation.dto.PatchOperationSpec
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -42,12 +42,12 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation.op == "remove" && operation.path == "/members/-"
 
             override fun mapToObjectModification(
-                contributor: RequestingContributor,
+                contributor: SimpleContributor,
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
                 var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
+                    ?: Member(contributor.id, emptyList(), emptyMap())
                 return RemoveMember(memberValue)
             }
         },
@@ -58,12 +58,12 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation.op == "add" && operation.path == "/members/-"
 
             override fun mapToObjectModification(
-                contributor: RequestingContributor,
+                contributor: SimpleContributor,
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
                 var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.id, emptyList(), emptyMap(), contributor.isProjectAdmin)
+                    ?: Member(contributor.id, emptyList(), emptyMap())
                 return AddMember(memberValue)
             }
         },
