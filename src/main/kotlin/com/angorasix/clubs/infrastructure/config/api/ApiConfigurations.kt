@@ -29,6 +29,7 @@ class RoutesConfigs @ConstructorBinding constructor(
     val wellKnownGetSingle: Route,
     val wellKnownGetAll: Route,
     val wellKnownPatch: Route,
+    val wellKnownRegister: Route
 )
 
 data class Route(

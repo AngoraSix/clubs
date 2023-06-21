@@ -2,6 +2,7 @@ package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.context.annotation.Configuration
 
 /**
@@ -10,11 +11,11 @@ import org.springframework.context.annotation.Configuration
  *
  * @author rozagerardo
  */
-@Configuration
-@ConfigurationProperties(prefix = "configs")
-class WellKnownClubConfigurations {
-    lateinit var clubs: Clubs
-}
+@ConfigurationProperties(prefix = "wellknown.configurations")
+data class WellKnownClubConfigurations(
+    @NestedConfigurationProperty
+    val clubs: Clubs
+)
 
 class Clubs @ConstructorBinding constructor(
     wellKnownClubTypes: Map<String, String>,

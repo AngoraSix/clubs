@@ -27,6 +27,13 @@ configs:
           - ${configs.api.basePaths.wellKnown}
         method: PATCH
         path: "/{projectId}/{type}"
+      wellKnownRegister:
+        name: wellKnownRegister
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: POST
+        path: "/{projectId}"
     clubActions:
       addMember: addMember
       removeMember: removeMember

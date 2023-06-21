@@ -20,6 +20,7 @@ object ClubFactory {
             clubDescription.description,
             projectId,
             mutableSetOf(),
+            mutableSetOf(),
             clubDescription.open,
             clubDescription.public,
             clubDescription.social,

@@ -2,7 +2,7 @@ package com.angorasix.clubs.infrastructure.persistence.repository
 
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,6 +15,6 @@ interface ClubFilterRepository {
 
     fun findUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: RequestingContributor?,
+        requestingContributor: SimpleContributor?,
     ): Flow<Club>
 }

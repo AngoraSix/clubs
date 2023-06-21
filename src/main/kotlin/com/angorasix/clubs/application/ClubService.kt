@@ -6,9 +6,11 @@ import com.angorasix.clubs.domain.club.ClubRepository
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
+import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubDescription
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import reactor.core.publisher.Flux
 
 /**
@@ -22,13 +24,58 @@ class ClubService(
 ) {
 
     /**
+     * Method to register all well-known [Club]s for a Project.
+     * New clubs will be created, with the requesting contributor as Admin.
+     *
+     */
+    suspend fun registerAllWellKnownClub(
+        requestingContributor: SimpleContributor,
+        projectId: String,
+    ): Flow<Club> {
+        return wellKnownClubConfigurations.clubs.wellKnownClubDescriptions.values.map { description ->
+            repository.findByTypeAndProjectId(description.type, projectId)
+                ?: registerNewWellKnownClub(description, projectId, requestingContributor)
+
+        }.asFlow()
+    }
+
+    private suspend fun registerNewWellKnownClub(
+        description: WellKnownClubDescription,
+        projectId: String,
+        requestingContributor: SimpleContributor,
+    ): Club {
+        val newWellKnownClub = ClubFactory.fromDescription(
+            description,
+            projectId,
+        )
+        newWellKnownClub.register(requestingContributor)
+        return repository.save(newWellKnownClub)
+    }
+
+//    private suspend fun registerWellKnownClub(
+//        requestingContributor: SimpleContributor,
+//        projectId: String?,
+//    ): Flow<Club>? {
+//        return wellKnownClubConfigurations.clubs.wellKnownClubDescriptions.values.map { description ->
+//            repository.findByTypeAndProjectId(description.type, projectId) ?: {
+//                val newWellKnownClub = ClubFactory.fromDescription(
+//                    description,
+//                    projectId,
+//                )
+//                newWellKnownClub.register(requestingContributor)
+//                repository.save(newWellKnownClub)
+//            }
+//        }.asFlow()
+//    }
+
+    /**
      * Method to retrieve a collection of [Club]s.
      *
      * @return [Flux] of [Club]
      */
     fun findClubs(
         filter: ListClubsFilter,
-        requestingContributor: RequestingContributor?,
+        requestingContributor: SimpleContributor?,
     ): Flow<Club> = repository.findUsingFilter(filter, requestingContributor)
 
     /**
@@ -37,7 +84,7 @@ class ClubService(
      *
      */
     suspend fun modifyWellKnownClub(
-        requestingContributor: RequestingContributor,
+        requestingContributor: SimpleContributor,
         type: String,
         projectId: String?,
         modificationOperations: List<ClubModification<out Any>>,
@@ -105,11 +152,12 @@ private fun Club.update(
     updatedData: Club,
     wellKnown: Boolean = true,
 ): Club {
-    if (!wellKnown && updatingMember.isProjectAdmin) {
+    val isProjectAdmin = isAdmin(updatingMember?.contributorId)
+    if (!wellKnown && isProjectAdmin) {
         name = updatedData.name
         description = updatedData.description
     }
-    members = checkedUpdatedMembers(updatingMember, members, updatedData.members)
+    members = checkedUpdatedMembers(updatingMember, members, updatedData.members, isProjectAdmin)
     return this
 }
 
@@ -117,8 +165,9 @@ private fun checkedUpdatedMembers(
     updatingMember: Member,
     originalMembers: MutableSet<Member>,
     updatedMembers: MutableSet<Member>,
+    isProjectAdmin: Boolean,
 ): MutableSet<Member> {
-    if (updatingMember.isProjectAdmin) return updatedMembers
+    if (isProjectAdmin) return updatedMembers
     return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers))
     // @to-do:
     // depurate members to avoid adding member with non-allowed roles

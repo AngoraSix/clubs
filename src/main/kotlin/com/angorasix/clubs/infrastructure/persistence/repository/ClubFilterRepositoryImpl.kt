@@ -2,7 +2,7 @@ package com.angorasix.clubs.infrastructure.persistence.repository
 
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.commons.domain.RequestingContributor
+import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
@@ -19,23 +19,19 @@ class ClubFilterRepositoryImpl(val mongoOps: ReactiveMongoOperations) : ClubFilt
 
     override fun findUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: RequestingContributor?,
+        requestingContributor: SimpleContributor?,
     ): Flow<Club> {
         return mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).asFlow()
     }
 }
 
-private fun ListClubsFilter.toQuery(requestingContributor: RequestingContributor?): Query {
+private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): Query {
     val query = Query()
-
-    val requestingOwn = requestingContributor?.isProjectAdmin ?: false
 
     projectId?.let { query.addCriteria(where("projectId").`in`(it)) }
     contributorId?.let { query.addCriteria(where("members").elemMatch(where("contributorId").`is`(it))) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
+    query.addCriteria(where("admins").elemMatch(where("id").`is`(requestingContributor)).orOperator(where("public").`is`(true)))
 
-    if (!requestingOwn) {
-        query.addCriteria(where("public").`is`(true))
-    }
     return query
 }
