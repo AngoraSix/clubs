@@ -233,7 +233,7 @@ private fun ClubDto.resolveHypermedia(
             val addMemberAffordanceLink =
                 Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
                     .withInput(
-                        wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.requirements
+                        wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
                             ?: Void::class.java,
                     ).withName(wellKnownAddMemberActionName).toLink()
             add(addMemberAffordanceLink)

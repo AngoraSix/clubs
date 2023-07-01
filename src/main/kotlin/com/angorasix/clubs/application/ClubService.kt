@@ -32,7 +32,7 @@ class ClubService(
         requestingContributor: SimpleContributor,
         projectId: String,
     ): Flow<Club> {
-        return wellKnownClubConfigurations.clubs.wellKnownClubDescriptions.values.map { description ->
+        return wellKnownClubConfigurations.wellKnownClubDescriptions.values.map { description ->
             repository.findByTypeAndProjectId(description.type, projectId)
                 ?: registerNewWellKnownClub(description, projectId, requestingContributor)
 
@@ -90,7 +90,7 @@ class ClubService(
         modificationOperations: List<ClubModification<out Any>>,
     ): Club? {
         val club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                 ClubFactory.fromDescription(
                     it,
                     projectId,
@@ -119,7 +119,7 @@ class ClubService(
         updatedClub: Club,
     ): Club? {
         var club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                 ClubFactory.fromDescription(
                     it,
                     projectId,
@@ -135,10 +135,10 @@ class ClubService(
      *
      */
     suspend fun getWellKnownClub(type: String, projectId: String): Club? =
-        if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type)) repository.findByTypeAndProjectId(
+        if (wellKnownClubConfigurations.wellKnownClubTypes.containsValue(type)) repository.findByTypeAndProjectId(
             type,
             projectId,
-        ) ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+        ) ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
             ClubFactory.fromDescription(
                 it,
                 projectId,

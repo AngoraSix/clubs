@@ -3,7 +3,6 @@ package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.boot.context.properties.NestedConfigurationProperty
-import org.springframework.context.annotation.Configuration
 
 /**
  * <p>
@@ -11,28 +10,40 @@ import org.springframework.context.annotation.Configuration
  *
  * @author rozagerardo
  */
-@ConfigurationProperties(prefix = "wellknown.configurations")
-data class WellKnownClubConfigurations(
-    @NestedConfigurationProperty
-    val clubs: Clubs
-)
+@ConfigurationProperties(prefix = "wellknown.configurations.clubs")
+class WellKnownClubConfigurations {
 
-class Clubs @ConstructorBinding constructor(
-    wellKnownClubTypes: Map<String, String>,
-    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
-) {
-    private val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> =
-        mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
+    var wellKnownClubTypes: Map<String, String>
+    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription>
 
-    var wellKnownClubTypes = wellKnownClubTypes
-    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
-        wellKnownClubDescriptions.map { WellKnownClubDescription(it, typeToRequirement[it.type]!!) }
-            .associateBy {
-                it.type
-            } as MutableMap<String, WellKnownClubDescription>
+    @ConstructorBinding
+    constructor(
+        wellKnownClubTypes: Map<String, String>,
+        wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
+    ) {
+     this.wellKnownClubTypes = wellKnownClubTypes
+     this.wellKnownClubDescriptions = processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
+    }
 }
 
-class WellKnownClubDescription constructor(
+fun processProperties(
+    wellKnownClubTypes: Map<String, String>,
+    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
+): MutableMap<String, WellKnownClubDescription> {
+    val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> =
+        mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
+    return wellKnownClubDescriptions.map {
+        WellKnownClubDescription(
+            it,
+            typeToRequirement[it.type]!!,
+        )
+    }
+        .associateBy {
+            it.type
+        } as MutableMap<String, WellKnownClubDescription>
+}
+
+class WellKnownClubDescription @ConstructorBinding constructor(
     rawDescription: RawWellKnownClubDescription,
     mappedRequirements: Class<out DescriptionRequirements>,
 ) {
@@ -52,8 +63,7 @@ class WellKnownClubDescription constructor(
         requirements = mappedRequirements
     }
 }
-
-class RawWellKnownClubDescription constructor(
+data class RawWellKnownClubDescription(
     var type: String,
     var description: String,
     var open: Boolean,
@@ -63,4 +73,4 @@ class RawWellKnownClubDescription constructor(
 
 interface DescriptionRequirements
 
-class ContributorCandidatesRequirements(var contact: String) : DescriptionRequirements
+data class ContributorCandidatesRequirements(var contact: String) : DescriptionRequirements

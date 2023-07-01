@@ -10,7 +10,8 @@ import org.springframework.boot.context.properties.ConstructorBinding
  * @author rozagerardo
  */
 @ConfigurationProperties(prefix = "wellknown.roles")
+@ConstructorBinding
 data class WellKnownRoles(
     val admin: String,
-    var creator: String
+    val creator: String
 )
