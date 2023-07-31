@@ -6,6 +6,7 @@ import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Criteria.where
 import org.springframework.data.mongodb.core.query.Query
 
@@ -29,9 +30,19 @@ private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): 
     val query = Query()
 
     projectId?.let { query.addCriteria(where("projectId").`in`(it)) }
-    contributorId?.let { query.addCriteria(where("members").elemMatch(where("contributorId").`is`(it))) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
-    query.addCriteria(where("admins").elemMatch(where("id").`is`(requestingContributor)).orOperator(where("public").`is`(true)))
+    query.addCriteria(
+        Criteria().orOperator(
+            where("admins").elemMatch(
+                where("contributorId").`is`(
+                    requestingContributor?.contributorId,
+                ),
+            ),
+            where("open").`is`(true),
+            where("public").`is`(true),
+            where("members").elemMatch(where("contributorId").`is`(contributorId)),
+        ),
+    )
 
     return query
 }

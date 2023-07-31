@@ -14,10 +14,10 @@ import com.angorasix.commons.domain.modification.DomainObjectModification
 abstract class ClubModification<U>(modifyValue: U) : DomainObjectModification<Club, U>(modifyValue)
 
 class AddMember(member: Member) : ClubModification<Member>(member) {
-    override fun modify(requestingContributor: SimpleContributor, domainObject: Club): Club {
+    override fun modify(simpleContributor: SimpleContributor, domainObject: Club): Club {
         require(
-            (domainObject.isAdmin(requestingContributor.id))
-                .or(requestingContributor.id == modifyValue.contributorId),
+            (domainObject.isAdmin(simpleContributor.contributorId))
+                .or(simpleContributor.contributorId == modifyValue.contributorId),
         ) { "Can't add this member" }
         domainObject.addMember(modifyValue)
         return domainObject
@@ -27,8 +27,8 @@ class AddMember(member: Member) : ClubModification<Member>(member) {
 class RemoveMember(member: Member) : ClubModification<Member>(member) {
     override fun modify(requestingContributor: SimpleContributor, domainObject: Club): Club {
         require(
-            (domainObject.isAdmin(requestingContributor.id))
-                .or(requestingContributor.id == modifyValue.contributorId),
+            (domainObject.isAdmin(requestingContributor.contributorId))
+                .or(requestingContributor.contributorId == modifyValue.contributorId),
         ) { "Can't remove this member" }
         domainObject.removeMember(modifyValue)
         return domainObject

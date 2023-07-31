@@ -1,7 +1,5 @@
 package com.angorasix.clubs.domain.club
 
-import org.springframework.data.annotation.PersistenceCreator
-
 /**
  * <p>
  * </p>

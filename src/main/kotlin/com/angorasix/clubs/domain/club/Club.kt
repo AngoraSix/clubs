@@ -90,8 +90,15 @@ data class Club @PersistenceCreator constructor(
      * @param requestingContributor - contributor trying to see the Club.
      */
     fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean = public
-        .or(social.and(members.any { it.contributorId == requestingContributor?.id }))
-        .or(isAdmin(requestingContributor?.id))
+        .or(social.and(members.any { it.contributorId == requestingContributor?.contributorId }))
+        .or(isAdmin(requestingContributor?.contributorId))
+
+    fun resolveAdmins(requestingContributor: SimpleContributor?): Set<SimpleContributor> =
+        if (isVisibleToContributor(requestingContributor)) {
+            admins
+        } else {
+            admins.filter { it.contributorId == requestingContributor?.contributorId }.toSet()
+        }
 
     /**
      * Checks whether a particular contributor can be added as a member of this Club.
@@ -117,5 +124,5 @@ data class Club @PersistenceCreator constructor(
      * @param contributor - contributor candidate to check.
      */
     fun isAdmin(contributorId: String?): Boolean =
-        (contributorId != null).and(admins.any { it.id == contributorId })
+        (contributorId != null).and(admins.any { it.contributorId == contributorId })
 }

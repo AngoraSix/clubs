@@ -1,8 +1,6 @@
 package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
-import org.springframework.boot.context.properties.NestedConfigurationProperty
 
 /**
  * <p>
@@ -16,13 +14,13 @@ class WellKnownClubConfigurations {
     var wellKnownClubTypes: Map<String, String>
     var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription>
 
-    @ConstructorBinding
     constructor(
         wellKnownClubTypes: Map<String, String>,
         wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
     ) {
-     this.wellKnownClubTypes = wellKnownClubTypes
-     this.wellKnownClubDescriptions = processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
+        this.wellKnownClubTypes = wellKnownClubTypes
+        this.wellKnownClubDescriptions =
+            processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
     }
 }
 
@@ -43,7 +41,7 @@ fun processProperties(
         } as MutableMap<String, WellKnownClubDescription>
 }
 
-class WellKnownClubDescription @ConstructorBinding constructor(
+class WellKnownClubDescription constructor(
     rawDescription: RawWellKnownClubDescription,
     mappedRequirements: Class<out DescriptionRequirements>,
 ) {
@@ -63,6 +61,7 @@ class WellKnownClubDescription @ConstructorBinding constructor(
         requirements = mappedRequirements
     }
 }
+
 data class RawWellKnownClubDescription(
     var type: String,
     var description: String,
@@ -74,3 +73,5 @@ data class RawWellKnownClubDescription(
 interface DescriptionRequirements
 
 data class ContributorCandidatesRequirements(var contact: String) : DescriptionRequirements
+
+data class AdminContributorRequirements(var isAdmin: Boolean) : DescriptionRequirements

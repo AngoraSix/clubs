@@ -5,6 +5,7 @@ import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
+import com.angorasix.clubs.infrastructure.config.clubs.wellknown.AdminContributorRequirements
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
@@ -17,16 +18,21 @@ import com.angorasix.commons.reactive.presentation.error.resolveBadRequest
 import com.angorasix.commons.reactive.presentation.error.resolveExceptionResponse
 import com.angorasix.commons.reactive.presentation.error.resolveNotFound
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.MediaTypes
 import org.springframework.hateoas.mediatype.Affordances
+import org.springframework.hateoas.server.core.EmbeddedWrapper
+import org.springframework.hateoas.server.core.EmbeddedWrappers
 import org.springframework.http.HttpMethod
 import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.awaitBody
-import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.util.UriComponentsBuilder
 
@@ -54,20 +60,27 @@ class ClubHandler(
         val projectId = request.pathVariable("projectId")
         return if (requestingContributor is SimpleContributor) {
             try {
-                val wellKnownClubs =
-                    service.registerAllWellKnownClub(
+                service.registerAllWellKnownClub(
+                    requestingContributor,
+                    projectId,
+                ).asFlow().map {
+                    it.convertToDto(
                         requestingContributor,
-                        projectId,
-                    ).map {
-                        it?.convertToDto(
-                            requestingContributor,
-                            apiConfigs,
-                            wellKnownClubConfigurations,
-                            request,
+                        apiConfigs,
+                        wellKnownClubConfigurations,
+                        request,
+                    )
+                }.let {
+                    ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                        .bodyValueAndAwait(
+                            it.convertToDto(
+                                requestingContributor,
+                                projectId,
+                                apiConfigs,
+                                request,
+                            ),
                         )
-                    }
-                return ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
-                    .bodyValueAndAwait(wellKnownClubs)
+                }
             } catch (ex: RuntimeException) {
                 return resolveExceptionResponse(ex, "Well-Known Club")
             }
@@ -83,7 +96,8 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[apiConfigs.headers.contributor]
+        val contributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         return service.getWellKnownClub(type, projectId)?.let {
@@ -105,20 +119,36 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun getWellKnownClubsAll(request: ServerRequest): ServerResponse {
-        val requestingContributor = request.attributes()[apiConfigs.headers.contributor]
+        val requestingContributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
+        val projectId = request.pathVariable("projectId")
+        // @TODO ACA no de los uqery params si no del requeste en general, o manualmente
+        val queryFilter = ListClubsFilter(
+            listOf(projectId),
+            null,
+            requestingContributor?.contributorId,
+        )
         return service.findClubs(
-            request.queryParams().toQueryFilter(),
-            requestingContributor as? SimpleContributor,
+            queryFilter,
+            requestingContributor,
         ).map {
             it.convertToDto(
-                requestingContributor as? SimpleContributor,
+                requestingContributor,
                 apiConfigs,
                 wellKnownClubConfigurations,
                 request,
             )
         }
             .let {
-                ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyAndAwait(it)
+                ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                    .bodyValueAndAwait(
+                        it.convertToDto(
+                            requestingContributor,
+                            projectId,
+                            apiConfigs,
+                            request,
+                        ),
+                    )
             }
     }
 
@@ -129,7 +159,8 @@ class ClubHandler(
      * @return the `ServerResponse`
      */
     suspend fun patchWellKnownClub(request: ServerRequest): ServerResponse {
-        val contributor = request.attributes()[apiConfigs.headers.contributor]
+        val contributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
         val patch = request.awaitBody(Patch::class)
@@ -167,6 +198,7 @@ private fun Club.convertToDto(): ClubDto {
         description,
         projectId,
         members.map { it.convertToDto() }.toMutableSet(),
+        mutableSetOf(),
         open,
         public,
         social,
@@ -187,9 +219,14 @@ private fun Club.convertToDto(
         type,
         description,
         projectId,
-        if (showAllData) members.map { it.convertToDto() }.toMutableSet()
-        else members.filter { it.contributorId == contributor?.id }.map { it.convertToDto() }
-            .toMutableSet(),
+        if (showAllData) {
+            members.map { it.convertToDto() }.toMutableSet()
+        } else {
+            members.filter { it.contributorId == contributor?.contributorId }
+                .map { it.convertToDto() }
+                .toMutableSet()
+        },
+        resolveAdmins(contributor),
         if (showAllData) open else null,
         if (showAllData) public else null,
         if (showAllData) social else null,
@@ -254,13 +291,71 @@ private fun ClubDto.resolveHypermedia(
     return this
 }
 
+private suspend fun Flow<ClubDto>.convertToDto(
+    contributor: SimpleContributor?,
+    projectId: String,
+    apiConfigs: ApiConfigs,
+    request: ServerRequest,
+): CollectionModel<ClubDto> {
+    // Fix this when Spring HATEOAS provides consistent support for reactive/coroutines
+    val dtoResources = this.toList(mutableListOf())
+    val isEmpty = dtoResources.isNullOrEmpty()
+    val collectionModel = if (isEmpty) {
+        val wrappers = EmbeddedWrappers(false)
+        val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
+        CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
+    } else {
+        CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
+    }
+    return collectionModel.resolveHypermedia(
+        contributor,
+        projectId,
+        apiConfigs,
+        request,
+        isEmpty,
+    )
+}
+
+private fun CollectionModel<ClubDto>.resolveHypermedia(
+    requestingContributor: SimpleContributor?,
+    projectId: String,
+    apiConfigs: ApiConfigs,
+    request: ServerRequest,
+    isEmpty: Boolean,
+): CollectionModel<ClubDto> {
+    val wellKnownGetAllRoute = apiConfigs.routes.wellKnownGetAll
+    // self
+    val selfLink = Link.of(
+        uriBuilder(request).path(wellKnownGetAllRoute.resolvePath()).build().toUriString(),
+    ).withRel(wellKnownGetAllRoute.name).expand(projectId).withSelfRel()
+    val selfLinkWithDefaultAffordance =
+        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+    add(selfLinkWithDefaultAffordance)
+    // register wellknown clubs
+    if (requestingContributor != null && requestingContributor.isAdminHint == true && isEmpty) {
+        val wellKnownRegisterAllRoute = apiConfigs.routes.wellKnownRegister
+        val wellKnownRegisterAllActionName = apiConfigs.clubActions.registerAll
+        val registerAllWellknownLink = Link.of(
+            uriBuilder(request).path(wellKnownRegisterAllRoute.resolvePath()).build()
+                .toUriString(),
+        ).withTitle(wellKnownRegisterAllActionName).withName(wellKnownRegisterAllActionName)
+            .withRel(wellKnownRegisterAllActionName).expand(projectId)
+        val registerAllAffordanceLink =
+            Affordances.of(registerAllWellknownLink).afford(wellKnownRegisterAllRoute.method)
+                .withInput(AdminContributorRequirements::class.java)
+                .withName(wellKnownRegisterAllActionName).toLink()
+        add(registerAllAffordanceLink)
+    }
+    return this
+}
+
 private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPath().let {
     UriComponentsBuilder.fromHttpRequest(request.exchange().request).replacePath(it.toString()) //
         .replaceQuery("")
 }
 
 private fun SimpleContributor.convertToMember(): Member {
-    return Member(id, emptyList(), emptyMap())
+    return Member(contributorId, emptyList(), emptyMap())
 }
 
 private fun Member.convertToDto(): MemberDto {
