@@ -49,7 +49,7 @@ class ClubHandler(
 ) {
 
     /**
-     * Handler for the Patch Club endpoint, retrieving a Mono with the requested Club.
+     * Handler for the Register all Well-known Club endpoint, retrieving a Flow of the created/registered Clubs.
      *
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
@@ -122,7 +122,6 @@ class ClubHandler(
         val requestingContributor =
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
         val projectId = request.pathVariable("projectId")
-        // @TODO ACA no de los uqery params si no del requeste en general, o manualmente
         val queryFilter = ListClubsFilter(
             listOf(projectId),
             null,

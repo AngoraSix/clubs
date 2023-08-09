@@ -58,7 +58,7 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
     ADD(
         object : PatchOperationSpec {
             override fun supportsPatchOperation(operation: PatchOperation): Boolean =
-                operation.op == "add" && operation.path == "/members/-"
+                operation.op == "add" && operation.path == "/members/+"
 
             override fun mapToObjectModification(
                 contributor: SimpleContributor,
