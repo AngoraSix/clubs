@@ -1,7 +1,6 @@
 package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 /**
  * <p>
@@ -12,5 +11,5 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties(prefix = "wellknown.roles")
 data class WellKnownRoles(
     val admin: String,
-    var creator: String
+    val creator: String,
 )

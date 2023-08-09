@@ -9,6 +9,7 @@ import com.angorasix.commons.presentation.dto.PatchOperation
 import com.angorasix.commons.presentation.dto.PatchOperationSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.hateoas.RepresentationModel
+import org.springframework.hateoas.server.core.Relation
 import java.time.ZonedDateTime
 
 /**
@@ -22,6 +23,7 @@ data class MemberDto(
     var data: Map<String, Any> = mutableMapOf(),
 )
 
+@Relation(collectionRelation = "clubList", itemRelation = "club")
 data class ClubDto(
     val id: String? = null,
     val name: String? = null,
@@ -29,6 +31,7 @@ data class ClubDto(
     val description: String? = null,
     val projectId: String? = null,
     val members: MutableSet<MemberDto> = mutableSetOf(),
+    val admins: Set<SimpleContributor> = emptySet(),
     val open: Boolean? = null,
     val public: Boolean? = null,
     val social: Boolean? = null,
@@ -47,7 +50,7 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
                 var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.id, emptyList(), emptyMap())
+                    ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return RemoveMember(memberValue)
             }
         },
@@ -55,7 +58,7 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
     ADD(
         object : PatchOperationSpec {
             override fun supportsPatchOperation(operation: PatchOperation): Boolean =
-                operation.op == "add" && operation.path == "/members/-"
+                operation.op == "add" && operation.path == "/members/+"
 
             override fun mapToObjectModification(
                 contributor: SimpleContributor,
@@ -63,9 +66,10 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
                 var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.id, emptyList(), emptyMap())
+                    ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return AddMember(memberValue)
             }
         },
-    );
+    ),
+    ;
 }

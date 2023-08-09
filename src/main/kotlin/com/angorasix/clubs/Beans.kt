@@ -2,6 +2,7 @@ package com.angorasix.clubs
 
 import com.angorasix.clubs.application.ClubService
 import com.angorasix.clubs.infrastructure.persistence.converter.ZonedDateTimeConvertersUtils
+import com.angorasix.clubs.infrastructure.security.ClubSecurityConfiguration
 import com.angorasix.clubs.presentation.handler.ClubHandler
 import com.angorasix.clubs.presentation.router.ClubRouter
 import org.springframework.context.ApplicationContextInitializer
@@ -18,6 +19,9 @@ val beans = beans {
                 ref<ZonedDateTimeConvertersUtils.ZonedDateTimeWritingConverter>(),
             ),
         )
+    }
+    bean {
+        ClubSecurityConfiguration().springSecurityFilterChain(ref())
     }
     bean<ClubService>()
     bean<ClubHandler>()

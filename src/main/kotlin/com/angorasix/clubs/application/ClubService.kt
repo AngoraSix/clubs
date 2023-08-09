@@ -10,7 +10,6 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubDe
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import reactor.core.publisher.Flux
 
 /**
@@ -31,12 +30,11 @@ class ClubService(
     suspend fun registerAllWellKnownClub(
         requestingContributor: SimpleContributor,
         projectId: String,
-    ): Flow<Club> {
-        return wellKnownClubConfigurations.clubs.wellKnownClubDescriptions.values.map { description ->
+    ): List<Club> {
+        return wellKnownClubConfigurations.wellKnownClubDescriptions.values.map { description ->
             repository.findByTypeAndProjectId(description.type, projectId)
                 ?: registerNewWellKnownClub(description, projectId, requestingContributor)
-
-        }.asFlow()
+        }
     }
 
     private suspend fun registerNewWellKnownClub(
@@ -90,7 +88,7 @@ class ClubService(
         modificationOperations: List<ClubModification<out Any>>,
     ): Club? {
         val club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                 ClubFactory.fromDescription(
                     it,
                     projectId,
@@ -119,7 +117,7 @@ class ClubService(
         updatedClub: Club,
     ): Club? {
         var club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
+            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                 ClubFactory.fromDescription(
                     it,
                     projectId,
@@ -135,16 +133,19 @@ class ClubService(
      *
      */
     suspend fun getWellKnownClub(type: String, projectId: String): Club? =
-        if (wellKnownClubConfigurations.clubs.wellKnownClubTypes.containsValue(type)) repository.findByTypeAndProjectId(
-            type,
-            projectId,
-        ) ?: wellKnownClubConfigurations.clubs.wellKnownClubDescriptions[type]?.let {
-            ClubFactory.fromDescription(
-                it,
+        if (wellKnownClubConfigurations.wellKnownClubTypes.containsValue(type)) {
+            repository.findByTypeAndProjectId(
+                type,
                 projectId,
-            )
+            ) ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
+                ClubFactory.fromDescription(
+                    it,
+                    projectId,
+                )
+            }
+        } else {
+            null
         }
-        else null
 }
 
 private fun Club.update(
@@ -152,7 +153,7 @@ private fun Club.update(
     updatedData: Club,
     wellKnown: Boolean = true,
 ): Club {
-    val isProjectAdmin = isAdmin(updatingMember?.contributorId)
+    val isProjectAdmin = isAdmin(updatingMember.contributorId)
     if (!wellKnown && isProjectAdmin) {
         name = updatedData.name
         description = updatedData.description
@@ -168,12 +169,14 @@ private fun checkedUpdatedMembers(
     isProjectAdmin: Boolean,
 ): MutableSet<Member> {
     if (isProjectAdmin) return updatedMembers
-    return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers))
-    // @to-do:
-    // depurate members to avoid adding member with non-allowed roles
-    // and clean up data to allow only well-known data
+    return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers)) {
+        // @to-do:
+        // depurate members to avoid adding member with non-allowed roles
+        // and clean up data to allow only well-known data
         updatedMembers
-    else originalMembers
+    } else {
+        originalMembers
+    }
 }
 
 private fun isModifyingUpdatingMember(

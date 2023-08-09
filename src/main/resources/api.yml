@@ -19,7 +19,7 @@ configs:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
         method: GET
-        path: ""
+        path: "/{projectId}"
       wellKnownPatch:
         name: clubPatch
         basePaths:
@@ -37,3 +37,4 @@ configs:
     clubActions:
       addMember: addMember
       removeMember: removeMember
+      registerAll: registerAll
