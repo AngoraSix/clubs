@@ -40,9 +40,17 @@ private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): 
             ),
             where("open").`is`(true),
             where("public").`is`(true),
-            where("members").elemMatch(where("contributorId").`is`(contributorId)),
+            where("members").elemMatch(where("contributorId").`in`(memberContributorId)),
         ),
     )
-
+    adminId?.let {
+        query.addCriteria(
+            where("admins").elemMatch(
+                where("contributorId").`in`(
+                    it
+                ),
+            ),
+        )
+    }
     return query
 }

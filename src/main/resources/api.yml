@@ -1,25 +1,30 @@
 configs:
   api:
-    headers:
-      contributor: ${A6_CLUBS_CONTRIBUTORHEADER:A6-Contributor}
     basePaths:
       clubs: clubs
       wellKnown: "/well-known"
     routes:
       wellKnownGetSingle:
-        name: club
+        name: wellknownSingle
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
         method: GET
         path: "/{projectId}/{type}"
-      wellKnownGetAll:
-        name: clubAll
+      wellKnownGetForProject:
+        name: wellknownForProject
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
         method: GET
         path: "/{projectId}"
+      wellKnownSearch:
+        name: wellknownSearch
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+        method: GET
+        path: "/"
       wellKnownPatch:
         name: clubPatch
         basePaths:
