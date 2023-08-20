@@ -14,7 +14,6 @@ import org.springframework.http.HttpMethod
 @Configuration
 @ConfigurationProperties(prefix = "configs.api")
 class ApiConfigs {
-    lateinit var headers: HeadersConfigs
     lateinit var routes: RoutesConfigs
     lateinit var basePaths: BasePathConfigs
     lateinit var clubActions: ClubActions
@@ -26,7 +25,8 @@ class BasePathConfigs constructor(val clubs: String, val wellKnown: String)
 
 class RoutesConfigs constructor(
     val wellKnownGetSingle: Route,
-    val wellKnownGetAll: Route,
+    val wellKnownGetForProject: Route,
+    val wellKnownSearch: Route,
     val wellKnownPatch: Route,
     val wellKnownRegister: Route,
 )

@@ -29,7 +29,6 @@ import org.springframework.hateoas.mediatype.Affordances
 import org.springframework.hateoas.server.core.EmbeddedWrapper
 import org.springframework.hateoas.server.core.EmbeddedWrappers
 import org.springframework.http.HttpMethod
-import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.awaitBody
@@ -118,14 +117,14 @@ class ClubHandler(
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
-    suspend fun getWellKnownClubsAll(request: ServerRequest): ServerResponse {
+    suspend fun getWellKnownClubsForProject(request: ServerRequest): ServerResponse {
         val requestingContributor =
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
         val projectId = request.pathVariable("projectId")
         val queryFilter = ListClubsFilter(
             listOf(projectId),
             null,
-            requestingContributor?.contributorId,
+            requestingContributor?.let { listOf(it.contributorId) },
         )
         return service.findClubs(
             queryFilter,
@@ -144,6 +143,41 @@ class ClubHandler(
                         it.convertToDto(
                             requestingContributor,
                             projectId,
+                            apiConfigs,
+                            request,
+                        ),
+                    )
+            }
+    }
+
+    /**
+     * Handler for the Search Clubs with filters (usually by projectId),
+     * retrieving a Flux with all the matching Clubs.
+     *
+     * @param request - HTTP `ServerRequest` object
+     * @return the `ServerResponse`
+     */
+    suspend fun searchWellKnownClubs(request: ServerRequest): ServerResponse {
+        val requestingContributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
+        val queryFilter = ListClubsFilter.fromMultiValueMap(request.queryParams())
+        return service.findClubs(
+            queryFilter,
+            requestingContributor,
+        ).map {
+            it.convertToDto(
+                requestingContributor,
+                apiConfigs,
+                wellKnownClubConfigurations,
+                request,
+            )
+        }
+            .let {
+                ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                    .bodyValueAndAwait(
+                        it.convertToDto(
+                            requestingContributor,
+                            queryFilter,
                             apiConfigs,
                             request,
                         ),
@@ -315,6 +349,35 @@ private suspend fun Flow<ClubDto>.convertToDto(
     )
 }
 
+private suspend fun Flow<ClubDto>.convertToDto(
+    contributor: SimpleContributor?,
+    filter: ListClubsFilter,
+    apiConfigs: ApiConfigs,
+    request: ServerRequest,
+): CollectionModel<ClubDto> {
+    // Fix this when Spring HATEOAS provides consistent support for reactive/coroutines
+    val pair = generateCollectionModel()
+    return pair.second.resolveHypermedia(
+        filter,
+        apiConfigs,
+        request,
+    )
+}
+
+private suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionModel<ClubDto>> {
+    val dtoResources = this.toList(mutableListOf())
+    val isEmpty = dtoResources.isNullOrEmpty()
+    val collectionModel = if (isEmpty) {
+        val wrappers = EmbeddedWrappers(false)
+        val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
+        CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
+    } else {
+        CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
+    }
+    return Pair(isEmpty, collectionModel)
+}
+
+
 private fun CollectionModel<ClubDto>.resolveHypermedia(
     requestingContributor: SimpleContributor?,
     projectId: String,
@@ -322,7 +385,7 @@ private fun CollectionModel<ClubDto>.resolveHypermedia(
     request: ServerRequest,
     isEmpty: Boolean,
 ): CollectionModel<ClubDto> {
-    val wellKnownGetAllRoute = apiConfigs.routes.wellKnownGetAll
+    val wellKnownGetAllRoute = apiConfigs.routes.wellKnownGetForProject
     // self
     val selfLink = Link.of(
         uriBuilder(request).path(wellKnownGetAllRoute.resolvePath()).build().toUriString(),
@@ -348,6 +411,24 @@ private fun CollectionModel<ClubDto>.resolveHypermedia(
     return this
 }
 
+private fun CollectionModel<ClubDto>.resolveHypermedia(
+    filter: ListClubsFilter,
+    apiConfigs: ApiConfigs,
+    request: ServerRequest,
+): CollectionModel<ClubDto> {
+    val wellKnownSearchRoute = apiConfigs.routes.wellKnownSearch
+    // self
+    val selfLink = Link.of(
+        uriBuilder(request).path(wellKnownSearchRoute.resolvePath())
+            .queryParams(filter.toMultiValueMap()).build()
+            .toUriString(),
+    ).withSelfRel()
+    val selfLinkWithDefaultAffordance =
+        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+    add(selfLinkWithDefaultAffordance)
+    return this
+}
+
 private fun uriBuilder(request: ServerRequest) = request.requestPath().contextPath().let {
     UriComponentsBuilder.fromHttpRequest(request.exchange().request).replacePath(it.toString()) //
         .replaceQuery("")
@@ -359,12 +440,4 @@ private fun SimpleContributor.convertToMember(): Member {
 
 private fun Member.convertToDto(): MemberDto {
     return MemberDto(contributorId, roles, data)
-}
-
-private fun MultiValueMap<String, String>.toQueryFilter(): ListClubsFilter {
-    return ListClubsFilter(
-        getFirst("projectId")?.split(","),
-        getFirst("type"),
-        getFirst("contributorId"),
-    )
 }
