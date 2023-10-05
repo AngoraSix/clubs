@@ -11,4 +11,4 @@ spring:
     name: ${A6_CLUBS_APP_NAME:clubs}
   data:
     mongodb:
-      uri: ${A6_CLUBS_MONGO_DB_URI:mongodb://localhost:27017/clubs}
+      uri: ${A6_CLUBS_MONGO_DB_URI:mongodb://localhost:27017/}${A6_CLUBS_MONGO_DB_NAME:a6-clubs}${A6_CLUBS_MONGO_DB_PARAMS:?}
