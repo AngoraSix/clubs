@@ -6,7 +6,7 @@
   <parent>
     <artifactId>parent-pom-spring-kotlin</artifactId>
     <groupId>com.angorasix</groupId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
   </parent>
   <artifactId>clubs</artifactId>
   <name>clubs</name>
@@ -47,7 +47,7 @@
     <dependency>
       <artifactId>commons.core</artifactId>
       <groupId>com.angorasix</groupId>
-      <version>0.2.4</version>
+      <version>0.2.6</version>
     </dependency>
 
     <!-- check if necessary with newer versions https://github.com/Playtika/testcontainers-spring-boot/issues/562 -->

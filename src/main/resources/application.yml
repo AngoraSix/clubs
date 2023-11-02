@@ -4,6 +4,12 @@ context:
 server:
   port: ${A6_CLUBS_PORT:9085}
 
+logging:
+  level:
+    root: ${A6_CLUBS_LOGGING_LEVEL_GENERAL:INFO}
+    org.springframework.web: ${A6_CLUBS_LOGGING_LEVEL_WEB:INFO}
+    com.angorasix: ${A6_CLUBS_LOGGING_LEVEL_ANGORASIX:INFO}
+
 spring:
   config:
     import: classpath:/wellknown.yml, classpath:/api.yml, classpath:/security.yml
@@ -11,4 +17,4 @@ spring:
     name: ${A6_CLUBS_APP_NAME:clubs}
   data:
     mongodb:
-      uri: ${A6_CLUBS_MONGO_DB_URI:mongodb://localhost:27017/clubs}
+      uri: ${A6_CLUBS_MONGO_DB_URI:mongodb://localhost:27017/}${A6_CLUBS_MONGO_DB_NAME:a6-clubs}${A6_CLUBS_MONGO_DB_PARAMS:?}

@@ -47,7 +47,7 @@ private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): 
         query.addCriteria(
             where("admins").elemMatch(
                 where("contributorId").`in`(
-                    it
+                    it,
                 ),
             ),
         )
