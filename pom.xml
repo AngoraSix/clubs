@@ -3,15 +3,17 @@
   xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>clubs</artifactId>
+  <name>clubs</name>
+  <description>Clubs Service</description>
+  <version>0.2.1</version>
+
   <parent>
     <artifactId>parent-pom-spring-kotlin</artifactId>
     <groupId>com.angorasix</groupId>
     <version>0.2.2</version>
   </parent>
-  <artifactId>clubs</artifactId>
-  <name>clubs</name>
-  <description>Clubs Service</description>
-  <version>0.2.1</version>
 
   <properties>
     <jacoco-coverage.class.branch.min>0.00</jacoco-coverage.class.branch.min>
