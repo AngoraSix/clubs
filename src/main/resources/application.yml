@@ -4,6 +4,12 @@ context:
 server:
   port: ${A6_CLUBS_PORT:9085}
 
+logging:
+  level:
+    root: ${A6_CLUBS_LOGGING_LEVEL_GENERAL:INFO}
+    org.springframework.web: ${A6_CLUBS_LOGGING_LEVEL_WEB:INFO}
+    com.angorasix: ${A6_CLUBS_LOGGING_LEVEL_ANGORASIX:INFO}
+
 spring:
   config:
     import: classpath:/wellknown.yml, classpath:/api.yml, classpath:/security.yml
