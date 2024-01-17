@@ -15,7 +15,7 @@ object ClubFactory {
         projectId: String?,
     ): Club {
         return Club(
-            "$projectId-${clubDescription.type}",
+            "$projectId+${clubDescription.type}",
             clubDescription.type,
             clubDescription.description,
             projectId,

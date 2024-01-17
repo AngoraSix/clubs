@@ -12,6 +12,7 @@ import com.angorasix.commons.presentation.dto.Patch
 import com.angorasix.commons.reactive.presentation.error.resolveBadRequest
 import com.angorasix.commons.reactive.presentation.error.resolveExceptionResponse
 import com.angorasix.commons.reactive.presentation.error.resolveNotFound
+import com.angorasix.commons.reactive.presentation.utils.affectedContributors
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
@@ -194,10 +195,18 @@ class ClubHandler(
                 }
                 val modifyClubOperations: List<ClubModification<Any>> =
                     modifyOperations.filterIsInstance<ClubModification<Any>>()
-                service.modifyWellKnownClub(contributor, type, projectId, modifyClubOperations)
-                    ?.convertToDto(contributor, apiConfigs, wellKnownClubConfigurations, request)
+                val serviceOutput =
+                    service.modifyWellKnownClub(contributor, type, projectId, modifyClubOperations)
+                val affectedContributorsIds = serviceOutput?.admins?.map { it.contributorId } ?: emptyList()
+                serviceOutput?.convertToDto(
+                    contributor,
+                    apiConfigs,
+                    wellKnownClubConfigurations,
+                    request,
+                )
                     ?.let {
-                        ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON)
+                        ServerResponse.ok().affectedContributors(request, affectedContributorsIds)
+                            .contentType(MediaTypes.HAL_FORMS_JSON)
                             .bodyValueAndAwait(it)
                     } ?: resolveNotFound("Can't patch this Well-Known Club", "Well-known Club")
             } catch (ex: RuntimeException) {
