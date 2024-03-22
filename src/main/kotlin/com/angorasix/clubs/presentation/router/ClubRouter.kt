@@ -26,10 +26,6 @@ class ClubRouter(
     fun clubRouterFunction() = coRouter {
         apiConfigs.basePaths.clubs.nest {
             filter { request, next ->
-                println("MIRA VOO")
-                val debug = request.awaitPrincipal() as JwtAuthenticationToken?
-                println(debug)
-                println(debug?.token)
                 extractRequestingContributor(
                     request,
                     next,
