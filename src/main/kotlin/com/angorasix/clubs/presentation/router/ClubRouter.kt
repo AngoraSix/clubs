@@ -3,8 +3,6 @@ package com.angorasix.clubs.presentation.router
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.presentation.handler.ClubHandler
 import com.angorasix.commons.reactive.presentation.filter.extractRequestingContributor
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.web.reactive.function.server.awaitPrincipal
 import org.springframework.web.reactive.function.server.coRouter
 
 /**
