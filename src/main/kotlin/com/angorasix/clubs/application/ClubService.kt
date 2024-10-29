@@ -77,8 +77,8 @@ class ClubService(
     ): Flow<Club> = repository.findUsingFilter(filter, requestingContributor)
 
     /**
-     * Method to add a member to a [Club].
-     * If the club is a well-known club, then it will be created before adding the member.
+     * Method to modify a [Club] with [ClubModification]s.
+     * If the club is a well-known club, then it will be created before modifying.
      *
      */
     suspend fun modifyWellKnownClub(

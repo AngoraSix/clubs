@@ -11,11 +11,8 @@ import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import org.springframework.hateoas.CollectionModel
-import org.springframework.hateoas.Link
-import org.springframework.hateoas.mediatype.Affordances
 import org.springframework.hateoas.server.core.EmbeddedWrapper
 import org.springframework.hateoas.server.core.EmbeddedWrappers
-import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.server.ServerRequest
 
 /**
@@ -72,56 +69,6 @@ fun Club.convertToDto(
             wellKnownClubConfigurations,
             request,
         )
-}
-
-fun ClubDto.resolveHypermedia(
-    member: Member?,
-    club: Club,
-    apiConfigs: ApiConfigs,
-    wellKnownClubConfigurations: WellKnownClubConfigurations,
-    request: ServerRequest,
-): ClubDto {
-    val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
-    // self
-    val selfLink = Link.of(
-        uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString(),
-    ).withRel(wellKnownGetSingleRoute.name).expand(projectId, type).withSelfRel()
-    val selfLinkWithDefaultAffordance =
-        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
-    add(selfLinkWithDefaultAffordance)
-
-    // add member
-    if (member != null) {
-        if (club.canAddMember(member)) {
-            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
-            val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
-            val addMemberLink = Link.of(
-                uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
-                    .toUriString(),
-            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
-                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
-            val addMemberAffordanceLink =
-                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
-                    .withInput(
-                        wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
-                            ?: Void::class.java,
-                    ).withName(wellKnownAddMemberActionName).toLink()
-            add(addMemberAffordanceLink)
-        } else if (club.canRemoveMember(member)) {
-            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownPatch
-            val wellKnownRemoveMemberActionName = apiConfigs.clubActions.removeMember
-            val removeMemberLink = Link.of(
-                uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build()
-                    .toUriString(),
-            ).withTitle(wellKnownRemoveMemberActionName).withName(wellKnownRemoveMemberActionName)
-                .withRel(wellKnownRemoveMemberActionName).expand(projectId, type)
-            val removeMemberAffordanceLink =
-                Affordances.of(removeMemberLink).afford(wellKnownRemoveMemberRoute.method)
-                    .withName(wellKnownRemoveMemberActionName).toLink()
-            add(removeMemberAffordanceLink)
-        }
-    }
-    return this
 }
 
 suspend fun Flow<ClubDto>.convertToDto(

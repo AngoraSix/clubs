@@ -2,7 +2,7 @@ context:
   initializer:
     classes: com.angorasix.clubs.BeansInitializer
 server:
-  port: ${A6_CLUBS_PORT:9085}
+  port: ${A6_CLUBS_PORT:10900}
 
 logging:
   level:

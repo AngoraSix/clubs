@@ -71,5 +71,4 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
             }
         },
     ),
-    ;
 }

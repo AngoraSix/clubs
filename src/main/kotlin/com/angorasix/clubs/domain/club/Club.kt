@@ -121,7 +121,7 @@ data class Club @PersistenceCreator constructor(
     /**
      * Checks whether a particular contributor is Admin of this Club.
      *
-     * @param contributor - contributor candidate to check.
+     * @param contributorId - contributor candidate to check.
      */
     fun isAdmin(contributorId: String?): Boolean =
         (contributorId != null).and(admins.any { it.contributorId == contributorId })

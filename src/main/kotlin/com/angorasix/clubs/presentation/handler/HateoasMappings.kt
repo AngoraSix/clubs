@@ -1,7 +1,10 @@
 package com.angorasix.clubs.presentation.handler
 
+import com.angorasix.clubs.domain.club.Club
+import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.AdminContributorRequirements
+import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.commons.domain.SimpleContributor
@@ -21,6 +24,56 @@ import org.springframework.web.util.UriComponentsBuilder
  *
  * @author rozagerardo
  */
+fun ClubDto.resolveHypermedia(
+    member: Member?,
+    club: Club,
+    apiConfigs: ApiConfigs,
+    wellKnownClubConfigurations: WellKnownClubConfigurations,
+    request: ServerRequest,
+): ClubDto {
+    val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
+    // self
+    val selfLink = Link.of(
+        uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString(),
+    ).withRel(wellKnownGetSingleRoute.name).expand(projectId, type).withSelfRel()
+    val selfLinkWithDefaultAffordance =
+        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+    add(selfLinkWithDefaultAffordance)
+
+    // add member
+    if (member != null) {
+        if (club.canAddMember(member)) {
+            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
+            val addMemberLink = Link.of(
+                uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
+                    .toUriString(),
+            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
+                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
+            val addMemberAffordanceLink =
+                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
+                    .withInput(
+                        wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
+                            ?: Void::class.java,
+                    ).withName(wellKnownAddMemberActionName).toLink()
+            add(addMemberAffordanceLink)
+        } else if (club.canRemoveMember(member)) {
+            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownRemoveMemberActionName = apiConfigs.clubActions.removeMember
+            val removeMemberLink = Link.of(
+                uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build()
+                    .toUriString(),
+            ).withTitle(wellKnownRemoveMemberActionName).withName(wellKnownRemoveMemberActionName)
+                .withRel(wellKnownRemoveMemberActionName).expand(projectId, type)
+            val removeMemberAffordanceLink =
+                Affordances.of(removeMemberLink).afford(wellKnownRemoveMemberRoute.method)
+                    .withName(wellKnownRemoveMemberActionName).toLink()
+            add(removeMemberAffordanceLink)
+        }
+    }
+    return this
+}
+
 suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionModel<ClubDto>> {
     val dtoResources = this.toList(mutableListOf())
     val isEmpty = dtoResources.isNullOrEmpty()
