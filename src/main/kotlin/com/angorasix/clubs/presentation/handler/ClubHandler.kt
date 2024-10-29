@@ -189,7 +189,7 @@ class ClubHandler(
                 val modifyOperations = patch.operations.map {
                     it.toDomainObjectModification(
                         contributor,
-                        SupportedPatchOperations.values().map { it.op }.toList(),
+                        SupportedPatchOperations.values().map { o -> o.op }.toList(),
                         objectMapper,
                     )
                 }
@@ -213,7 +213,7 @@ class ClubHandler(
                 return resolveExceptionResponse(ex, "Well-Known Club")
             }
         } else {
-            resolveBadRequest("Invalid Contributor Header", "Contributor Header")
+            resolveBadRequest("Invalid Contributor", "Contributor")
         }
     }
 }

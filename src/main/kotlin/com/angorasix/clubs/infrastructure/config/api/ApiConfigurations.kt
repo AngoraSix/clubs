@@ -40,7 +40,7 @@ data class Route(
     fun resolvePath(): String = basePaths.joinToString("").plus(path)
 }
 
-class ClubActions constructor(
+class ClubActions(
     val addMember: String,
     val removeMember: String,
     val registerAll: String,
