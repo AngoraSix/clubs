@@ -70,5 +70,5 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 return AddMember(memberValue)
             }
         },
-    )
+    ),
 }
