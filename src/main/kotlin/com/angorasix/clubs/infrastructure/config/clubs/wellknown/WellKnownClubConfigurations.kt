@@ -45,19 +45,11 @@ class WellKnownClubDescription constructor(
     rawDescription: RawWellKnownClubDescription,
     mappedRequirements: Class<out DescriptionRequirements>,
 ) {
-    var type: String
-    var open: Boolean
-    var public: Boolean
-    var social: Boolean
-    var requirements: Class<out DescriptionRequirements>
-
-    init {
-        type = rawDescription.type
-        open = rawDescription.open
-        public = rawDescription.public
-        social = rawDescription.social
-        requirements = mappedRequirements
-    }
+    var type: String = rawDescription.type
+    var open: Boolean = rawDescription.open
+    var public: Boolean = rawDescription.public
+    var social: Boolean = rawDescription.social
+    var requirements: Class<out DescriptionRequirements> = mappedRequirements
 }
 
 data class RawWellKnownClubDescription(
