@@ -46,7 +46,6 @@ class WellKnownClubDescription constructor(
     mappedRequirements: Class<out DescriptionRequirements>,
 ) {
     var type: String
-    var description: String
     var open: Boolean
     var public: Boolean
     var social: Boolean
@@ -54,7 +53,6 @@ class WellKnownClubDescription constructor(
 
     init {
         type = rawDescription.type
-        description = rawDescription.description
         open = rawDescription.open
         public = rawDescription.public
         social = rawDescription.social
@@ -64,7 +62,6 @@ class WellKnownClubDescription constructor(
 
 data class RawWellKnownClubDescription(
     var type: String,
-    var description: String,
     var open: Boolean,
     var public: Boolean,
     var social: Boolean,

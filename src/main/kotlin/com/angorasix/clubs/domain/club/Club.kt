@@ -17,13 +17,13 @@ data class Club @PersistenceCreator constructor(
     @field:Id val id: String?,
     var name: String,
     val type: String,
-    var description: String,
     val projectId: String?,
     var members: MutableSet<Member> = mutableSetOf(),
     val admins: MutableSet<SimpleContributor> = mutableSetOf(),
     val open: Boolean, // anyone can access without invitation
     val public: Boolean, // visible for the rest
     val social: Boolean, // members can interact / see themselves
+    var description: String?,
     val createdAt: ZonedDateTime,
 ) {
 
@@ -34,25 +34,25 @@ data class Club @PersistenceCreator constructor(
     constructor(
         name: String,
         type: String,
-        description: String,
         projectId: String?,
         members: MutableSet<Member> = mutableSetOf(),
         admins: MutableSet<SimpleContributor> = mutableSetOf(),
         open: Boolean,
         public: Boolean,
         social: Boolean,
+        description: String? = null,
         zone: ZoneId? = ZoneId.systemDefault(),
     ) : this(
         null,
         name,
         type,
-        description,
         projectId,
         members,
         admins,
         open,
         public,
         social,
+        description,
         ZonedDateTime.now(zone),
     )
 
