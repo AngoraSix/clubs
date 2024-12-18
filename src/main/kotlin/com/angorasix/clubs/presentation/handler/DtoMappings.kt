@@ -2,6 +2,7 @@ package com.angorasix.clubs.presentation.handler
 
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
+import com.angorasix.clubs.domain.club.MemberStatusValue
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
@@ -63,7 +64,7 @@ fun Club.convertToDto(
         if (showAllData) createdAt else null,
     )
         .resolveHypermedia(
-            contributor?.convertToMember(),
+            contributor,
             this,
             apiConfigs,
             wellKnownClubConfigurations,
@@ -112,8 +113,8 @@ suspend fun Flow<ClubDto>.convertToDto(
     )
 }
 
-fun SimpleContributor.convertToMember(): Member {
-    return Member(contributorId, emptyList(), emptyMap())
+fun SimpleContributor.convertToMember(status: MemberStatusValue? = null): Member {
+    return Member(contributorId, emptyList(), emptyMap(), status ?: MemberStatusValue.INACTIVE)
 }
 
 fun Member.convertToDto(): MemberDto {

@@ -80,7 +80,8 @@ data class Club @PersistenceCreator constructor(
      * @param member - contributor to be removed from the set
      */
     fun removeMember(member: Member) {
-        members.remove(member)
+        val existingMember = members.find { it.contributorId == member.contributorId }
+        existingMember?.let { members.add(existingMember.copy(status = MemberStatusValue.INACTIVE)) }
     }
 
     /**
@@ -90,7 +91,7 @@ data class Club @PersistenceCreator constructor(
      * @param requestingContributor - contributor trying to see the Club.
      */
     fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean = public
-        .or(social.and(members.any { it.contributorId == requestingContributor?.contributorId }))
+        .or(social.and(members.any { it.contributorId == requestingContributor?.contributorId &&  it.status.isActive() }))
         .or(isAdmin(requestingContributor?.contributorId))
 
     fun resolveAdmins(requestingContributor: SimpleContributor?): Set<SimpleContributor> =

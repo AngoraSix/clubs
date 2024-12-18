@@ -25,12 +25,13 @@ import org.springframework.web.util.UriComponentsBuilder
  * @author rozagerardo
  */
 fun ClubDto.resolveHypermedia(
-    member: Member?,
+    requestingContributor: SimpleContributor?,
     club: Club,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
     request: ServerRequest,
 ): ClubDto {
+    val member = requestingContributor?.convertToMember()
     val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
     // self
     val selfLink = Link.of(
@@ -70,6 +71,27 @@ fun ClubDto.resolveHypermedia(
                     .withName(wellKnownRemoveMemberActionName).toLink()
             add(removeMemberAffordanceLink)
         }
+    }
+
+    // can invite
+    if (!club.open && club.isAdmin(requestingContributor?.contributorId)) {
+        // send invitation action
+        // then modify member, now can be "pending"/"invited"
+        // and of course, when pending, it should contain a token to check the invitation
+            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
+            val addMemberLink = Link.of(
+                uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
+                    .toUriString(),
+            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
+                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
+            val addMemberAffordanceLink =
+                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
+                    .withInput(
+                        wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
+                            ?: Void::class.java,
+                    ).withName(wellKnownAddMemberActionName).toLink()
+            add(addMemberAffordanceLink)
     }
     return this
 }

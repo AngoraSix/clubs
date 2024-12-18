@@ -146,58 +146,59 @@ class ClubService(
         } else {
             null
         }
-}
 
-private fun Club.update(
-    updatingMember: Member,
-    updatedData: Club,
-    wellKnown: Boolean = true,
-): Club {
-    val isProjectAdmin = isAdmin(updatingMember.contributorId)
-    if (!wellKnown && isProjectAdmin) {
-        name = updatedData.name
-        description = updatedData.description
-    }
-    members = checkedUpdatedMembers(updatingMember, members, updatedData.members, isProjectAdmin)
-    return this
-}
-
-private fun checkedUpdatedMembers(
-    updatingMember: Member,
-    originalMembers: MutableSet<Member>,
-    updatedMembers: MutableSet<Member>,
-    isProjectAdmin: Boolean,
-): MutableSet<Member> {
-    if (isProjectAdmin) return updatedMembers
-    return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers)) {
-        // @to-do:
-        // depurate members to avoid adding member with non-allowed roles
-        // and clean up data to allow only well-known data
-        updatedMembers
-    } else {
-        originalMembers
-    }
-}
-
-private fun isModifyingUpdatingMember(
-    updatingMember: Member,
-    originalMembers: MutableSet<Member>,
-    updatedMembers: MutableSet<Member>,
-): Boolean {
-    val diff1 = originalMembers.minus(updatedMembers)
-    val diff2 = updatedMembers.minus(originalMembers)
-
-    val bothHaveJustOneUpdatedMember =
-        { set1: Set<Member>, set2: Set<Member> -> (set1.size == 1) xor (set2.size == 1) }
-    val anyContainsUpdatingMember =
-        { set1: Set<Member>, set2: Set<Member>, member: Member ->
-            set1.contains(updatingMember) || set2.contains(
-                member,
-            )
+    private fun Club.update(
+        updatingMember: Member,
+        updatedData: Club,
+        wellKnown: Boolean = true,
+    ): Club {
+        val isProjectAdmin = isAdmin(updatingMember.contributorId)
+        if (!wellKnown && isProjectAdmin) {
+            name = updatedData.name
+            description = updatedData.description
         }
-    return bothHaveJustOneUpdatedMember(diff1, diff2) && anyContainsUpdatingMember(
-        diff1,
-        diff2,
-        updatingMember,
-    )
+        members =
+            checkedUpdatedMembers(updatingMember, members, updatedData.members, isProjectAdmin)
+        return this
+    }
+
+    private fun checkedUpdatedMembers(
+        updatingMember: Member,
+        originalMembers: MutableSet<Member>,
+        updatedMembers: MutableSet<Member>,
+        isProjectAdmin: Boolean,
+    ): MutableSet<Member> {
+        if (isProjectAdmin) return updatedMembers
+        return if (isModifyingUpdatingMember(updatingMember, originalMembers, updatedMembers)) {
+            // @to-do:
+            // depurate members to avoid adding member with non-allowed roles
+            // and clean up data to allow only well-known data
+            updatedMembers
+        } else {
+            originalMembers
+        }
+    }
+
+    private fun isModifyingUpdatingMember(
+        updatingMember: Member,
+        originalMembers: MutableSet<Member>,
+        updatedMembers: MutableSet<Member>,
+    ): Boolean {
+        val diff1 = originalMembers.minus(updatedMembers)
+        val diff2 = updatedMembers.minus(originalMembers)
+
+        val bothHaveJustOneUpdatedMember =
+            { set1: Set<Member>, set2: Set<Member> -> (set1.size == 1) xor (set2.size == 1) }
+        val anyContainsUpdatingMember =
+            { set1: Set<Member>, set2: Set<Member>, member: Member ->
+                set1.contains(updatingMember) || set2.contains(
+                    member,
+                )
+            }
+        return bothHaveJustOneUpdatedMember(diff1, diff2) && anyContainsUpdatingMember(
+            diff1,
+            diff2,
+            updatingMember,
+        )
+    }
 }

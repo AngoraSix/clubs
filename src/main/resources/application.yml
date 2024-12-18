@@ -12,7 +12,7 @@ logging:
 
 spring:
   config:
-    import: classpath:/wellknown.yml, classpath:/api.yml, classpath:/security.yml
+    import: optional:file:config/env.properties, classpath:/tokens.yml, classpath:/wellknown.yml, classpath:/api.yml, classpath:/security.yml
   application:
     name: ${A6_CLUBS_APP_NAME:clubs}
   data:

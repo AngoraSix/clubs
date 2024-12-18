@@ -9,31 +9,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * @author rozagerardo
  */
 @ConfigurationProperties(prefix = "wellknown.configurations.clubs")
-class WellKnownClubConfigurations {
+class WellKnownClubConfigurations(
+    var wellKnownClubTypes: Map<WellKnownClubTypes, String>,
+    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>
+) {
 
-    var wellKnownClubTypes: Map<String, String>
-    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription>
-
-    constructor(
-        wellKnownClubTypes: Map<String, String>,
-        wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
-    ) {
-        this.wellKnownClubTypes = wellKnownClubTypes
-        this.wellKnownClubDescriptions =
-            processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
-    }
+    var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
+        processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
 }
 
 fun processProperties(
-    wellKnownClubTypes: Map<String, String>,
+    wellKnownClubTypes: Map<WellKnownClubTypes, String>,
     wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
 ): MutableMap<String, WellKnownClubDescription> {
-    val typeToRequirement: MutableMap<String, Class<out DescriptionRequirements>> =
-        mutableMapOf(wellKnownClubTypes["contributorCandidates"]!! to (ContributorCandidatesRequirements::class.java))
+    val typeToRequirement: Map<String, Class<out DescriptionRequirements>> =
+        mapOf(
+            wellKnownClubTypes[WellKnownClubTypes.CONTRIBUTOR_CANDIDATES]!!  to (ContributorCandidatesRequirements::class.java),
+            )
     return wellKnownClubDescriptions.map {
         WellKnownClubDescription(
             it,
-            typeToRequirement[it.type]!!,
+            typeToRequirement[it.type],
         )
     }
         .associateBy {
@@ -41,15 +37,15 @@ fun processProperties(
         } as MutableMap<String, WellKnownClubDescription>
 }
 
-class WellKnownClubDescription constructor(
+class WellKnownClubDescription(
     rawDescription: RawWellKnownClubDescription,
-    mappedRequirements: Class<out DescriptionRequirements>,
+    mappedRequirements: Class<out DescriptionRequirements>? = null,
 ) {
     var type: String = rawDescription.type
     var open: Boolean = rawDescription.open
     var public: Boolean = rawDescription.public
     var social: Boolean = rawDescription.social
-    var requirements: Class<out DescriptionRequirements> = mappedRequirements
+    var requirements: Class<out DescriptionRequirements>? = mappedRequirements
 }
 
 data class RawWellKnownClubDescription(
@@ -58,6 +54,11 @@ data class RawWellKnownClubDescription(
     var public: Boolean,
     var social: Boolean,
 )
+
+enum class WellKnownClubTypes{
+    CONTRIBUTOR_CANDIDATES,
+    PROJECT_MANAGEMENT_MEMBERS,
+}
 
 interface DescriptionRequirements
 

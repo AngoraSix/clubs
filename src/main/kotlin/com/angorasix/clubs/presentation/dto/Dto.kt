@@ -1,6 +1,7 @@
 package com.angorasix.clubs.presentation.dto
 
 import com.angorasix.clubs.domain.club.Member
+import com.angorasix.clubs.domain.club.MemberStatusValue
 import com.angorasix.clubs.domain.club.modification.AddMember
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.domain.club.modification.RemoveMember
@@ -21,6 +22,7 @@ data class MemberDto(
     var contributorId: String? = null,
     var roles: Collection<String> = mutableSetOf(),
     var data: Map<String, Any> = mutableMapOf(),
+    val status: String? = null,
 )
 
 @Relation(collectionRelation = "clubList", itemRelation = "club")
