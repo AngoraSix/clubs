@@ -29,7 +29,7 @@ class ClubRouter(
                     next,
                 )
             }
-            apiConfigs.basePaths.wellKnown.nest {
+            apiConfigs.basePaths.baseWellKnown.nest {
                 path(apiConfigs.routes.wellKnownPatch.path).nest {
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }

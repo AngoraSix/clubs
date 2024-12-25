@@ -1,11 +1,11 @@
 package com.angorasix.clubs.presentation.handler
 
 import com.angorasix.clubs.domain.club.Club
-import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.AdminContributorRequirements
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
+import com.angorasix.clubs.infrastructure.token.InvitationTokenInputRequirement
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
@@ -78,27 +78,25 @@ fun ClubDto.resolveHypermedia(
         // send invitation action
         // then modify member, now can be "pending"/"invited"
         // and of course, when pending, it should contain a token to check the invitation
-            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
-            val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
-            val addMemberLink = Link.of(
-                uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
-                    .toUriString(),
-            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
-                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
-            val addMemberAffordanceLink =
-                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
-                    .withInput(
-                        wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
-                            ?: Void::class.java,
-                    ).withName(wellKnownAddMemberActionName).toLink()
-            add(addMemberAffordanceLink)
+        val inviteContributorRoute = apiConfigs.routes.wellKnownPatch
+        val inviteContributorActionName = apiConfigs.clubActions.inviteContributor
+        val inviteContributorLink = Link.of(
+            uriBuilder(request).path(inviteContributorRoute.resolvePath()).build()
+                .toUriString(),
+        ).withTitle(inviteContributorActionName).withName(inviteContributorActionName)
+            .withRel(inviteContributorActionName).expand(club.id)
+        val inviteContributorAffordanceLink =
+            Affordances.of(inviteContributorLink).afford(inviteContributorRoute.method)
+                .withInput(InvitationTokenInputRequirement::class.java)
+                .withName(inviteContributorActionName).toLink()
+        add(inviteContributorAffordanceLink)
     }
     return this
 }
 
 suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionModel<ClubDto>> {
     val dtoResources = this.toList(mutableListOf())
-    val isEmpty = dtoResources.isNullOrEmpty()
+    val isEmpty = dtoResources.isEmpty()
     val collectionModel = if (isEmpty) {
         val wrappers = EmbeddedWrappers(false)
         val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)

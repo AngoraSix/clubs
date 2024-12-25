@@ -67,7 +67,7 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
-                var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
+                val memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
                     ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return AddMember(memberValue)
             }

@@ -12,7 +12,7 @@ data class Member(
     val contributorId: String,
     val roles: Collection<String> = mutableSetOf(),
     val data: Map<String, Any> = mutableMapOf(),
-    val status: MemberStatusValue = MemberStatusValue.INACTIVE,
+    var status: MemberStatusValue = MemberStatusValue.INACTIVE,
 ) {
 
     override fun equals(other: Any?): Boolean =
@@ -22,11 +22,6 @@ data class Member(
         return contributorId.hashCode()
     }
 }
-
-//data class MemberStatus(
-//    val status: MemberStatusValue = MemberStatusValue.INACTIVE,
-//    val invitationToken : MemberInvitationToken? = null
-//)
 
 enum class MemberStatusValue(value: String) {
     ACTIVE("active"),

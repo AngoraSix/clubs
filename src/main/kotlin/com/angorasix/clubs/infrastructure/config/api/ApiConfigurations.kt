@@ -24,7 +24,14 @@ class ApiConfigs(
     var clubActions: ClubActions,
 )
 
-class BasePathConfigs(val clubs: String, val wellKnown: String)
+class BasePathConfigs(
+    val clubs: String,
+    val baseWellKnown: String,
+    val baseListCrudRoute: String,
+    val baseByIdCrudRoute: String,
+    val baseByProjectId: String,
+    val baseByProjectIdAndType: String,
+)
 
 class RoutesConfigs(
     val wellKnownGetSingle: Route,
@@ -38,4 +45,5 @@ class ClubActions(
     val addMember: String,
     val removeMember: String,
     val registerAll: String,
+    val inviteContributor: String,
 )

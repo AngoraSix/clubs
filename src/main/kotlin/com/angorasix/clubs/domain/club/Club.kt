@@ -71,7 +71,8 @@ data class Club @PersistenceCreator constructor(
      * @param member - contributor to be added to the set
      */
     fun addMember(member: Member) {
-        members.add(member)
+        val memberToAdd = members.find { it.contributorId == member.contributorId } ?: member
+        members.add(if (open) memberToAdd.copy(status = MemberStatusValue.ACTIVE) else memberToAdd)
     }
 
     /**

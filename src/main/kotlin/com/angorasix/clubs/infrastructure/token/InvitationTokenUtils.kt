@@ -9,39 +9,48 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters
 import java.time.Instant
 
 class InvitationTokenUtils {
+
     companion object {
         fun createInvitationToken(
             jwtEncoder: JwtEncoder,
             tokenConfigurations: TokenConfigurations,
-            contributorId: String,
+            email: String,
             clubId: String,
-        ): String {
+        ): InvitationToken {
+            val token = InvitationToken(
+                email = email,
+                clubId = clubId,
+                expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime),
+            )
+
             val claims = JwtClaimsSet.builder()
                 .issuer(tokenConfigurations.issuer)
-                .subject(contributorId)
+                .subject(token.email)
                 .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(tokenConfigurations.expirationTime))
+                .expiresAt(token.expirationInstant)
                 .claim("alg", "HS256") // Specify the algorithm in claims
-                .claims {
-                    it.putAll(
-                        mapOf(
-                            TokenConfiguration.CLAIMS_CONTRIBUTOR_ID to contributorId,
-                            TokenConfiguration.CLAIMS_CLUB_ID to clubId,
-                        ),
-                    )
-                }
+                .claims { it.putAll(token.toClaims()) }
                 .build()
 
             val header = JwsHeader.with(MacAlgorithm.HS256)
                 .type("JWT") // Optional
                 .build()
 
-            return jwtEncoder.encode(
+            val tokenValue = jwtEncoder.encode(
                 JwtEncoderParameters.from(
                     header,
                     claims,
                 ),
             ).tokenValue
+            token.tokenValue = tokenValue
+            return token
         }
     }
+}
+
+private fun InvitationToken.toClaims(): Map<String, Any> {
+    return mapOf(
+        TokenConfiguration.CLAIMS_CONTRIBUTOR_EMAIL to email,
+        TokenConfiguration.CLAIMS_CLUB_ID to clubId,
+    )
 }

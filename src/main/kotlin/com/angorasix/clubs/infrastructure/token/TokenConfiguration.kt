@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 
 class TokenConfiguration {
     companion object {
-        const val CLAIMS_CONTRIBUTOR_ID = "contributorId"
+        const val CLAIMS_CONTRIBUTOR_EMAIL = "contributorEmail"
         const val CLAIMS_CLUB_ID = "clubId"
 
         private const val TOKEN_KEY_ID = "clubTokenJWKId"
