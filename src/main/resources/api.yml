@@ -4,7 +4,7 @@ configs:
       clubs: clubs
       baseWellKnown: "/well-known"
       baseListCrudRoute: ""
-      baseByIdCrudRoute: "/{id}"
+      baseByIdRoute: "/{id}"
       baseByProjectId: "/{projectId}"
       baseByProjectIdAndType: "/{projectId}/{type}"
     routes:

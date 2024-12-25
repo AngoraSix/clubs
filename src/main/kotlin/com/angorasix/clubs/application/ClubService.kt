@@ -50,22 +50,6 @@ class ClubService(
         return repository.save(newWellKnownClub)
     }
 
-//    private suspend fun registerWellKnownClub(
-//        requestingContributor: SimpleContributor,
-//        projectId: String?,
-//    ): Flow<Club>? {
-//        return wellKnownClubConfigurations.clubs.wellKnownClubDescriptions.values.map { description ->
-//            repository.findByTypeAndProjectId(description.type, projectId) ?: {
-//                val newWellKnownClub = ClubFactory.fromDescription(
-//                    description,
-//                    projectId,
-//                )
-//                newWellKnownClub.register(requestingContributor)
-//                repository.save(newWellKnownClub)
-//            }
-//        }.asFlow()
-//    }
-
     /**
      * Method to retrieve a collection of [Club]s.
      *

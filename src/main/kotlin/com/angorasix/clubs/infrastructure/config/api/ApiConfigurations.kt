@@ -28,7 +28,7 @@ class BasePathConfigs(
     val clubs: String,
     val baseWellKnown: String,
     val baseListCrudRoute: String,
-    val baseByIdCrudRoute: String,
+    val baseByIdRoute: String,
     val baseByProjectId: String,
     val baseByProjectIdAndType: String,
 )
@@ -39,6 +39,7 @@ class RoutesConfigs(
     val wellKnownSearch: Route,
     val wellKnownPatch: Route,
     val wellKnownRegister: Route,
+    val inviteContributor: Route,
 )
 
 class ClubActions(

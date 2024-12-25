@@ -1,7 +1,6 @@
 package com.angorasix.clubs.presentation.dto
 
 import com.angorasix.clubs.domain.club.Member
-import com.angorasix.clubs.domain.club.MemberStatusValue
 import com.angorasix.clubs.domain.club.modification.AddMember
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.domain.club.modification.RemoveMember
@@ -39,6 +38,10 @@ data class ClubDto(
     val social: Boolean? = null,
     val createdAt: ZonedDateTime? = null,
 ) : RepresentationModel<ClubDto>()
+
+data class InvitationTokenInput(
+    var email: String,
+)
 
 enum class SupportedPatchOperations(val op: PatchOperationSpec) {
     REMOVE(

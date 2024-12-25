@@ -8,5 +8,3 @@ class InvitationToken(
     var expirationInstant: Instant? = null,
     var tokenValue: String? = null,
 )
-
-data class InvitationTokenInputRequirement(var email: String)

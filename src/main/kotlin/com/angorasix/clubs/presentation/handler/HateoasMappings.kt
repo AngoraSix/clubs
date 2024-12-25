@@ -7,6 +7,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubCo
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.infrastructure.token.InvitationTokenInputRequirement
 import com.angorasix.clubs.presentation.dto.ClubDto
+import com.angorasix.clubs.presentation.dto.InvitationTokenInput
 import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
@@ -87,7 +88,7 @@ fun ClubDto.resolveHypermedia(
             .withRel(inviteContributorActionName).expand(club.id)
         val inviteContributorAffordanceLink =
             Affordances.of(inviteContributorLink).afford(inviteContributorRoute.method)
-                .withInput(InvitationTokenInputRequirement::class.java)
+                .withInput(InvitationTokenInput::class.java)
                 .withName(inviteContributorActionName).toLink()
         add(inviteContributorAffordanceLink)
     }

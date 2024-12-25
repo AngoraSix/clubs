@@ -30,8 +30,3 @@ enum class MemberStatusValue(value: String) {
 
     fun isActive(): Boolean = this == ACTIVE
 }
-//data class MemberInvitationToken(
-//    val value: String,
-//    val expirationInstant : Instant
-//    val
-//)
