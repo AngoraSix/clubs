@@ -13,6 +13,7 @@ class TokenConfiguration {
     companion object {
         const val CLAIMS_CONTRIBUTOR_EMAIL = "contributorEmail"
         const val CLAIMS_CLUB_ID = "clubId"
+        const val CLAIMS_CONTRIBUTOR_ID = "contributorId"
 
         private const val TOKEN_KEY_ID = "clubTokenJWKId"
 

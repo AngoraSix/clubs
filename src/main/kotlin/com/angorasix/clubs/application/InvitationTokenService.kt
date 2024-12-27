@@ -1,16 +1,28 @@
 package com.angorasix.clubs.application
 
+import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.ClubRepository
+import com.angorasix.clubs.infrastructure.config.amqp.AmqpConfigurations
 import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
 import com.angorasix.clubs.infrastructure.token.InvitationToken
 import com.angorasix.clubs.infrastructure.token.InvitationTokenUtils
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.DetailedContributor
+import com.angorasix.commons.infrastructure.intercommunication.dto.A6DomainResource
+import com.angorasix.commons.infrastructure.intercommunication.dto.A6InfraTopics
+import com.angorasix.commons.infrastructure.intercommunication.dto.domainresources.A6InfraClubDto
+import com.angorasix.commons.infrastructure.intercommunication.dto.invitations.A6InfraClubInvitation
+import com.angorasix.commons.infrastructure.intercommunication.dto.messaging.A6InfraMessageDto
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.messaging.support.MessageBuilder
 import org.springframework.security.oauth2.jwt.JwtEncoder
+import reactor.kotlin.core.publisher.toMono
 
 class InvitationTokenService(
     private val repository: ClubRepository,
     private val jwtEncoder: JwtEncoder,
     private val tokenConfigurations: TokenConfigurations,
+    private val streamBridge: StreamBridge,
+    private val amqpConfigs: AmqpConfigurations,
 ) {
 
     /**
@@ -20,19 +32,51 @@ class InvitationTokenService(
     suspend fun inviteContributor(
         clubId: String,
         email: String,
-        requestingContributor: SimpleContributor,
+        requestingContributor: DetailedContributor,
+        contributorId: String? = null
     ): InvitationToken? {
         val club = repository.findById(clubId)
         return if (club?.isAdmin(requestingContributor.contributorId) == true) {
             val invitationToken = InvitationTokenUtils.createInvitationToken(
-                jwtEncoder,
-                tokenConfigurations,
-                email,
-                clubId,
+                jwtEncoder = jwtEncoder,
+                tokenConfigurations = tokenConfigurations,
+                email = email,
+                clubId = clubId,
+                contributorId = contributorId,
             )
             println("Invitation token: $invitationToken")
-            // publish token with RabbitMQ
+            val messageData = A6InfraClubInvitation(
+                email = email,
+                club = A6InfraClubDto(
+                    id = clubId,
+                    name = club.name,
+                    description = club.description ?: "",
+                ),
+                token = invitationToken.tokenValue,
+            )
+            streamBridge.send(
+                amqpConfigs.bindings.clubInvitation,
+                MessageBuilder.withPayload(
+                    A6InfraMessageDto(
+                        targetId = contributorId ?: invitationToken.email,
+                        targetType = A6DomainResource.Contributor,
+                        objectId = invitationToken.clubId,
+                        objectType = A6DomainResource.Club.value,
+                        topic = A6InfraTopics.CLUB_INVITATION.value,
+                        requestingContributor = requestingContributor,
+                        messageData = messageData.toMap(),
+                    ),
+                ).build(),
+            )
             return invitationToken
         } else null
     }
+}
+
+private fun A6InfraClubInvitation.toMap(): Map<String, Any> {
+    return mapOf(
+        "email" to email,
+        "club" to club,
+        "token" to token,
+    )
 }

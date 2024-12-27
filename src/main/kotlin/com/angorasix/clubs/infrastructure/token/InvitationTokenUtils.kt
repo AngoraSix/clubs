@@ -16,22 +16,25 @@ class InvitationTokenUtils {
             tokenConfigurations: TokenConfigurations,
             email: String,
             clubId: String,
+            contributorId: String? = null,
         ): InvitationToken {
-            val token = InvitationToken(
-                email = email,
-                clubId = clubId,
-                expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime),
-            )
-
+            val expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime)
             val claims = JwtClaimsSet.builder()
                 .issuer(tokenConfigurations.issuer)
-                .subject(token.email)
+                .subject(email)
                 .issuedAt(Instant.now())
-                .expiresAt(token.expirationInstant)
+                .expiresAt(expirationInstant)
                 .claim("alg", "HS256") // Specify the algorithm in claims
-                .claims { it.putAll(token.toClaims()) }
+                .claims {
+                    it.putAll(
+                        mapOf(
+                            TokenConfiguration.CLAIMS_CONTRIBUTOR_EMAIL to email,
+                            TokenConfiguration.CLAIMS_CLUB_ID to clubId,
+                            TokenConfiguration.CLAIMS_CONTRIBUTOR_ID to contributorId,
+                        ),
+                    )
+                }
                 .build()
-
             val header = JwsHeader.with(MacAlgorithm.HS256)
                 .type("JWT") // Optional
                 .build()
@@ -42,15 +45,12 @@ class InvitationTokenUtils {
                     claims,
                 ),
             ).tokenValue
-            token.tokenValue = tokenValue
-            return token
+            return InvitationToken(
+                email = email,
+                clubId = clubId,
+                tokenValue = tokenValue,
+                expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime),
+            )
         }
     }
-}
-
-private fun InvitationToken.toClaims(): Map<String, Any> {
-    return mapOf(
-        TokenConfiguration.CLAIMS_CONTRIBUTOR_EMAIL to email,
-        TokenConfiguration.CLAIMS_CLUB_ID to clubId,
-    )
 }

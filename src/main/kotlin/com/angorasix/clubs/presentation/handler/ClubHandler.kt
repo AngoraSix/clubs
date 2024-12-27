@@ -8,6 +8,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubCo
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.InvitationTokenInput
 import com.angorasix.clubs.presentation.dto.SupportedPatchOperations
+import com.angorasix.commons.domain.DetailedContributor
 import com.angorasix.commons.domain.SimpleContributor
 import com.angorasix.commons.infrastructure.constants.AngoraSixInfrastructure
 import com.angorasix.commons.presentation.dto.Patch
@@ -235,13 +236,14 @@ class ClubHandler(
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val clubId = request.pathVariable("id")
         val tokenInput = request.awaitBody(InvitationTokenInput::class)
-        return if (requestingContributor is SimpleContributor) {
+        return if (requestingContributor is DetailedContributor) {
             try {
                 invitationTokenService.inviteContributor(
                     clubId = clubId,
                     email = tokenInput.email,
                     requestingContributor = requestingContributor,
-                )?.let {ServerResponse.ok().buildAndAwait()}
+                    contributorId = tokenInput.contributorId,
+                )?.let { ServerResponse.ok().buildAndAwait() }
                     ?: resolveNotFound("Can't invite to this Club", "Club Invitation")
             } catch (ex: RuntimeException) {
                 return resolveExceptionResponse(ex, "Club Invitation")

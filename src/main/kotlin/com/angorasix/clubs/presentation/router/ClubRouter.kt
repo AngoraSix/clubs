@@ -48,7 +48,7 @@ class ClubRouter(
             }
             apiConfigs.basePaths.baseByIdRoute.nest {
                 path(apiConfigs.routes.inviteContributor.path).nest {
-                    method(apiConfigs.routes.inviteContributor.method, handler::patchWellKnownClub)
+                    method(apiConfigs.routes.inviteContributor.method, handler::inviteContributor)
                 }
             }
         }

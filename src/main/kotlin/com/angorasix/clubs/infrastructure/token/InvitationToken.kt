@@ -5,6 +5,6 @@ import java.time.Instant
 class InvitationToken(
     val email: String,
     var clubId: String,
-    var expirationInstant: Instant? = null,
-    var tokenValue: String? = null,
+    var tokenValue: String,
+    var expirationInstant: Instant,
 )
