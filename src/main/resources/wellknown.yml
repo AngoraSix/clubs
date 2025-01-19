@@ -15,6 +15,7 @@ wellknown:
           open: false
           public: false
           social: true
+          isCreatorMember: true
   roles:
     admin: WELLKNOWN_ADMIN
     creator: WELLKNOWN_CREATOR

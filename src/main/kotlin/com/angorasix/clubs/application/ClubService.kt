@@ -10,6 +10,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubDe
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.singleOrNull
 import reactor.core.publisher.Flux
 
 /**
@@ -46,7 +47,7 @@ class ClubService(
             description,
             projectId,
         )
-        newWellKnownClub.register(requestingContributor)
+        newWellKnownClub.register(requestingContributor, description.isCreatorMember)
         return repository.save(newWellKnownClub)
     }
 
@@ -100,7 +101,7 @@ class ClubService(
         projectId: String?,
         updatedClub: Club,
     ): Club? {
-        var club = repository.findByTypeAndProjectId(type, projectId)
+        val club = repository.findByTypeAndProjectId(type, projectId)
             ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                 ClubFactory.fromDescription(
                     it,
@@ -116,20 +117,13 @@ class ClubService(
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.
      *
      */
-    suspend fun getWellKnownClub(type: String, projectId: String): Club? =
-        if (wellKnownClubConfigurations.wellKnownClubTypes.containsValue(type)) {
-            repository.findByTypeAndProjectId(
-                type,
-                projectId,
-            ) ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
-                ClubFactory.fromDescription(
-                    it,
-                    projectId,
-                )
-            }
-        } else {
-            null
-        }
+    suspend fun getWellKnownClub(type: String, projectId: String, requestingContributor: SimpleContributor?): Club? {
+        val filter = ListClubsFilter(
+            type = type,
+            projectId = listOf(projectId),
+        )
+        return repository.findUsingFilter(filter, requestingContributor).singleOrNull()
+    }
 
     private fun Club.update(
         updatingMember: Member,

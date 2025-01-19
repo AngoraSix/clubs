@@ -45,6 +45,7 @@ class WellKnownClubDescription(
     var open: Boolean = rawDescription.open
     var public: Boolean = rawDescription.public
     var social: Boolean = rawDescription.social
+    var isCreatorMember: Boolean = rawDescription.isCreatorMember
     var requirements: Class<out DescriptionRequirements>? = mappedRequirements
 }
 
@@ -53,6 +54,7 @@ data class RawWellKnownClubDescription(
     var open: Boolean,
     var public: Boolean,
     var social: Boolean,
+    var isCreatorMember: Boolean = false
 )
 
 enum class WellKnownClubTypes{

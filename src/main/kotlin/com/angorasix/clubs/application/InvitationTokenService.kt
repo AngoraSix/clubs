@@ -1,6 +1,5 @@
 package com.angorasix.clubs.application
 
-import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.ClubRepository
 import com.angorasix.clubs.infrastructure.config.amqp.AmqpConfigurations
 import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
@@ -15,7 +14,6 @@ import com.angorasix.commons.infrastructure.intercommunication.dto.messaging.A6I
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.support.MessageBuilder
 import org.springframework.security.oauth2.jwt.JwtEncoder
-import reactor.kotlin.core.publisher.toMono
 
 class InvitationTokenService(
     private val repository: ClubRepository,
@@ -33,7 +31,7 @@ class InvitationTokenService(
         clubId: String,
         email: String,
         requestingContributor: DetailedContributor,
-        contributorId: String? = null
+        contributorId: String? = null,
     ): InvitationToken? {
         val club = repository.findById(clubId)
         return if (club?.isAdmin(requestingContributor.contributorId) == true) {

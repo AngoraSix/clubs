@@ -33,9 +33,9 @@ class ClubRouter(
                 path(apiConfigs.routes.wellKnownPatch.path).nest {
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
-//                path(apiConfigs.routes.wellKnownGetSingle.path).nest {
-//                    method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
-//                }
+                path(apiConfigs.routes.wellKnownGetSingle.path).nest {
+                    method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
+                }
                 path(apiConfigs.routes.wellKnownGetForProject.path).nest {
                     method(apiConfigs.routes.wellKnownGetForProject.method, handler::getWellKnownClubsForProject)
                 }

@@ -30,3 +30,8 @@ enum class MemberStatusValue(value: String) {
 
     fun isActive(): Boolean = this == ACTIVE
 }
+
+enum class MemberRolesValue(val value: String) {
+    ADMIN("admin"),
+    CONTRIBUTOR("contributor");
+}

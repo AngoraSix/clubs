@@ -1,6 +1,7 @@
 package com.angorasix.clubs
 
 import com.angorasix.clubs.application.ClubService
+import com.angorasix.clubs.application.InvitationTokenService
 import com.angorasix.clubs.infrastructure.persistence.converter.ZonedDateTimeConvertersUtils
 import com.angorasix.clubs.infrastructure.security.ClubSecurityConfiguration
 import com.angorasix.clubs.infrastructure.token.TokenConfiguration
@@ -23,6 +24,7 @@ val beans = beans {
     bean {
         ClubSecurityConfiguration().springSecurityFilterChain(ref())
     }
+    bean<InvitationTokenService>()
     bean<ClubService>()
     bean<ClubHandler>()
     bean {

@@ -86,12 +86,12 @@ class ClubHandler(
      * @param request - HTTP `ServerRequest` object
      * @return the `ServerResponse`
      */
-    /*suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
+    suspend fun getWellKnownClub(request: ServerRequest): ServerResponse {
         val contributor =
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val projectId = request.pathVariable("projectId")
         val type = request.pathVariable("type")
-        return service.getWellKnownClub(type, projectId)?.let {
+        return service.getWellKnownClub(type, projectId, contributor as SimpleContributor?)?.let {
             val outputClub = it.convertToDto(
                 contributor as? SimpleContributor,
                 apiConfigs,
@@ -100,7 +100,7 @@ class ClubHandler(
             )
             ServerResponse.ok().contentType(MediaTypes.HAL_FORMS_JSON).bodyValueAndAwait(outputClub)
         } ?: resolveNotFound("Well-Known Club not found", "Well-Known Club")
-    }*/
+    }
 
     /**
      * Handler for the Get All Club endpoint with filters (usually by projectId),

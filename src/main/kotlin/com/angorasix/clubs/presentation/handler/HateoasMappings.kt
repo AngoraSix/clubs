@@ -5,7 +5,6 @@ import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.AdminContributorRequirements
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.clubs.infrastructure.token.InvitationTokenInputRequirement
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.InvitationTokenInput
 import com.angorasix.commons.domain.SimpleContributor

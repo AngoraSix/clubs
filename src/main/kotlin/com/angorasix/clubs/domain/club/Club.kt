@@ -61,8 +61,16 @@ data class Club @PersistenceCreator constructor(
      *
      * @param requestingContributor - contributor to be added to the 'admins' set
      */
-    fun register(requestingContributor: SimpleContributor) {
+    fun register(requestingContributor: SimpleContributor, isCreatorMember: Boolean? = false) {
         admins.add(requestingContributor)
+        if (isCreatorMember == true) {
+            members.add(Member(
+                contributorId = requestingContributor.contributorId,
+                status = MemberStatusValue.ACTIVE,
+                roles = setOf(MemberRolesValue.ADMIN.value),
+                data = mapOf("creator" to true),
+            ))
+        }
     }
 
     /**
