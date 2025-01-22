@@ -242,7 +242,7 @@ class ClubHandler(
                     clubId = clubId,
                     email = tokenInput.email,
                     requestingContributor = requestingContributor,
-                    contributorId = tokenInput.contributorId,
+                    contributorId = null, // tech debt: Trello-93G4IaSy
                 )?.let { ServerResponse.ok().buildAndAwait() }
                     ?: resolveNotFound("Can't invite to this Club", "Club Invitation")
             } catch (ex: RuntimeException) {

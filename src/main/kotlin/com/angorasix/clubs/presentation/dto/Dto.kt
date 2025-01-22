@@ -41,7 +41,6 @@ data class ClubDto(
 
 data class InvitationTokenInput(
     var email: String,
-    var contributorId: String? = null,
 )
 
 enum class SupportedPatchOperations(val op: PatchOperationSpec) {

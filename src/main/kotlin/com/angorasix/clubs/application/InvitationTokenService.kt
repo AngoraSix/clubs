@@ -34,7 +34,7 @@ class InvitationTokenService(
         contributorId: String? = null,
     ): InvitationToken? {
         val club = repository.findById(clubId)
-        return if (club?.isAdmin(requestingContributor.contributorId) == true) {
+        return if (club != null && club.isAdmin(requestingContributor.contributorId)) {
             val invitationToken = InvitationTokenUtils.createInvitationToken(
                 jwtEncoder = jwtEncoder,
                 tokenConfigurations = tokenConfigurations,
@@ -49,6 +49,7 @@ class InvitationTokenService(
                     id = clubId,
                     name = club.name,
                     description = club.description ?: "",
+                    projectId = club.projectId,
                 ),
                 token = invitationToken.tokenValue,
             )
@@ -56,7 +57,7 @@ class InvitationTokenService(
                 amqpConfigs.bindings.clubInvitation,
                 MessageBuilder.withPayload(
                     A6InfraMessageDto(
-                        targetId = contributorId ?: invitationToken.email,
+                        targetId = contributorId ?: email,
                         targetType = A6DomainResource.Contributor,
                         objectId = invitationToken.clubId,
                         objectType = A6DomainResource.Club.value,

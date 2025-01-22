@@ -75,9 +75,6 @@ fun ClubDto.resolveHypermedia(
 
     // can invite
     if (!club.open && club.isAdmin(requestingContributor?.contributorId)) {
-        // send invitation action
-        // then modify member, now can be "pending"/"invited"
-        // and of course, when pending, it should contain a token to check the invitation
         val inviteContributorRoute = apiConfigs.routes.wellKnownPatch
         val inviteContributorActionName = apiConfigs.clubActions.inviteContributor
         val inviteContributorLink = Link.of(
