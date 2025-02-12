@@ -17,7 +17,6 @@ object ClubFactory {
         return Club(
             "$projectId+${clubDescription.type}",
             clubDescription.type,
-            clubDescription.description,
             projectId,
             mutableSetOf(),
             mutableSetOf(),

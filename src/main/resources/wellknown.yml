@@ -2,15 +2,20 @@ wellknown:
   configurations:
     clubs:
       wellKnownClubTypes:
-        contributorCandidates: ${A6_CLUBS_WELLKNOWNTYPES_CONTRIBUTORCANDIDATES:contributor-candidates}
+        CONTRIBUTOR_CANDIDATES: ${A6_CLUBS_WELLKNOWNTYPES_CONTRIBUTORCANDIDATES:contributor-candidates}
+        PROJECT_MANAGEMENT_MEMBERS: ${A6_CLUBS_WELLKNOWNTYPES_PROJECTMANAGEMENTMEMBERS:project-management-members}
       wellKnownClubDescriptions:
-        - type: ${wellknown.configurations.clubs.wellKnownClubTypes.contributorCandidates}
-          description: Club of all the candidates that shown interested in a project
+        - type: ${wellknown.configurations.clubs.wellKnownClubTypes.CONTRIBUTOR_CANDIDATES}
           open: true
           public: false
           social: false
-          requirements:
+          requirements: # As reference, not used because HAL-FORM needs class
             contact: text
+        - type: ${wellknown.configurations.clubs.wellKnownClubTypes.PROJECT_MANAGEMENT_MEMBERS}
+          open: false
+          public: false
+          social: true
+          isCreatorMember: true
   roles:
     admin: WELLKNOWN_ADMIN
     creator: WELLKNOWN_CREATOR

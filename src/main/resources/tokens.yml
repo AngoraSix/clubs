@@ -1,0 +1,5 @@
+configs:
+  tokens:
+    secret: ${A6_CLUBS_JWTINVITATIONTOKENS_SECRET} # secret needs at least 32 characters long
+    expirationTime: ${A6_CLUBS_JWTINVITATIONTOKENS_EXPIRATIONTIME:4320} # 3 days
+    issuer: ${A6_CLUBS_JWTINVITATIONTOKENS_ISSUER:https://angorasix.com/clubs}

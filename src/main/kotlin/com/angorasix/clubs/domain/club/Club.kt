@@ -17,13 +17,13 @@ data class Club @PersistenceCreator constructor(
     @field:Id val id: String?,
     var name: String,
     val type: String,
-    var description: String,
     val projectId: String?,
     var members: MutableSet<Member> = mutableSetOf(),
     val admins: MutableSet<SimpleContributor> = mutableSetOf(),
     val open: Boolean, // anyone can access without invitation
     val public: Boolean, // visible for the rest
     val social: Boolean, // members can interact / see themselves
+    var description: String?,
     val createdAt: ZonedDateTime,
 ) {
 
@@ -34,25 +34,25 @@ data class Club @PersistenceCreator constructor(
     constructor(
         name: String,
         type: String,
-        description: String,
         projectId: String?,
         members: MutableSet<Member> = mutableSetOf(),
         admins: MutableSet<SimpleContributor> = mutableSetOf(),
         open: Boolean,
         public: Boolean,
         social: Boolean,
+        description: String? = null,
         zone: ZoneId? = ZoneId.systemDefault(),
     ) : this(
         null,
         name,
         type,
-        description,
         projectId,
         members,
         admins,
         open,
         public,
         social,
+        description,
         ZonedDateTime.now(zone),
     )
 
@@ -61,8 +61,18 @@ data class Club @PersistenceCreator constructor(
      *
      * @param requestingContributor - contributor to be added to the 'admins' set
      */
-    fun register(requestingContributor: SimpleContributor) {
+    fun register(requestingContributor: SimpleContributor, isCreatorMember: Boolean? = false) {
         admins.add(requestingContributor)
+        if (isCreatorMember == true) {
+            members.add(
+                Member(
+                    contributorId = requestingContributor.contributorId,
+                    status = MemberStatusValue.ACTIVE,
+                    roles = setOf(MemberRolesValue.ADMIN.value),
+                    data = mapOf("creator" to true),
+                ),
+            )
+        }
     }
 
     /**
@@ -71,7 +81,8 @@ data class Club @PersistenceCreator constructor(
      * @param member - contributor to be added to the set
      */
     fun addMember(member: Member) {
-        members.add(member)
+        val memberToAdd = members.find { it.contributorId == member.contributorId } ?: member
+        members.add(if (open) memberToAdd.copy(status = MemberStatusValue.ACTIVE) else memberToAdd)
     }
 
     /**
@@ -80,7 +91,8 @@ data class Club @PersistenceCreator constructor(
      * @param member - contributor to be removed from the set
      */
     fun removeMember(member: Member) {
-        members.remove(member)
+        val existingMember = members.find { it.contributorId == member.contributorId }
+        existingMember?.let { members.add(existingMember.copy(status = MemberStatusValue.INACTIVE)) }
     }
 
     /**
@@ -90,7 +102,15 @@ data class Club @PersistenceCreator constructor(
      * @param requestingContributor - contributor trying to see the Club.
      */
     fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean = public
-        .or(social.and(members.any { it.contributorId == requestingContributor?.contributorId }))
+        .or(
+            social.and(
+                members.any
+                {
+                    it.contributorId == requestingContributor?.contributorId &&
+                        it.status.isActive()
+                },
+            ),
+        )
         .or(isAdmin(requestingContributor?.contributorId))
 
     fun resolveAdmins(requestingContributor: SimpleContributor?): Set<SimpleContributor> =

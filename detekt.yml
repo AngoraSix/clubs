@@ -134,7 +134,7 @@ complexity:
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: [ ]
-    excludes: [ '**/configurationproperty/**.kt' ]
+    excludes: [ '**/infrastructure/config/**.kt' ]
   MethodOverloading:
     active: false
     threshold: 6

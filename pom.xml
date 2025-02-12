@@ -7,7 +7,7 @@
   <artifactId>clubs</artifactId>
   <name>clubs</name>
   <description>Clubs Service</description>
-  <version>0.2.1</version>
+  <version>0.3.0</version>
 
   <parent>
     <artifactId>parent-pom-spring-kotlin</artifactId>
@@ -49,7 +49,7 @@
     <dependency>
       <artifactId>commons.core</artifactId>
       <groupId>com.angorasix</groupId>
-      <version>0.2.7</version>
+      <version>0.3.0</version>
     </dependency>
 
     <!-- check if necessary with newer versions https://github.com/Playtika/testcontainers-spring-boot/issues/562 -->
@@ -69,6 +69,21 @@
       <groupId>org.springframework.cloud</groupId>
       <scope>test</scope>
     </dependency>
+
+    <!-- streams/messaging-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-stream</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+    </dependency>
+
   </dependencies>
 
   <dependencyManagement>

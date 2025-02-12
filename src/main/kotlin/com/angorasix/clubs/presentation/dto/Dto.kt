@@ -21,6 +21,7 @@ data class MemberDto(
     var contributorId: String? = null,
     var roles: Collection<String> = mutableSetOf(),
     var data: Map<String, Any> = mutableMapOf(),
+    val status: String? = null,
 )
 
 @Relation(collectionRelation = "clubList", itemRelation = "club")
@@ -37,6 +38,10 @@ data class ClubDto(
     val social: Boolean? = null,
     val createdAt: ZonedDateTime? = null,
 ) : RepresentationModel<ClubDto>()
+
+data class InvitationTokenInput(
+    var email: String,
+)
 
 enum class SupportedPatchOperations(val op: PatchOperationSpec) {
     REMOVE(
@@ -65,7 +70,7 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
-                var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
+                val memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
                     ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return AddMember(memberValue)
             }

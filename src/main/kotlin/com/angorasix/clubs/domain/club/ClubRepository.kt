@@ -4,6 +4,12 @@ import com.angorasix.clubs.infrastructure.persistence.repository.ClubFilterRepos
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.data.repository.kotlin.CoroutineSortingRepository
 
+/**
+ * <p>
+ * </p>
+ *
+ * @author rozagerardo
+ */
 interface ClubRepository :
     CoroutineCrudRepository<Club, String>,
     CoroutineSortingRepository<Club, String>,

@@ -29,13 +29,13 @@ class ClubRouter(
                     next,
                 )
             }
-            apiConfigs.basePaths.wellKnown.nest {
+            apiConfigs.basePaths.baseWellKnown.nest {
                 path(apiConfigs.routes.wellKnownPatch.path).nest {
                     method(apiConfigs.routes.wellKnownPatch.method, handler::patchWellKnownClub)
                 }
-//                path(apiConfigs.routes.wellKnownGetSingle.path).nest {
-//                    method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
-//                }
+                path(apiConfigs.routes.wellKnownGetSingle.path).nest {
+                    method(apiConfigs.routes.wellKnownGetSingle.method, handler::getWellKnownClub)
+                }
                 path(apiConfigs.routes.wellKnownGetForProject.path).nest {
                     method(apiConfigs.routes.wellKnownGetForProject.method, handler::getWellKnownClubsForProject)
                 }
@@ -44,6 +44,14 @@ class ClubRouter(
                 }
                 path(apiConfigs.routes.wellKnownRegister.path).nest {
                     method(apiConfigs.routes.wellKnownRegister.method, handler::registerWellKnownClubs)
+                }
+            }
+            apiConfigs.basePaths.baseByIdRoute.nest {
+                path(apiConfigs.routes.addMemberFromInvitation.path).nest {
+                    method(apiConfigs.routes.addMemberFromInvitation.method, handler::addMemberFromInvitationToken)
+                }
+                path(apiConfigs.routes.inviteContributor.path).nest {
+                    method(apiConfigs.routes.inviteContributor.method, handler::inviteContributor)
                 }
             }
         }
