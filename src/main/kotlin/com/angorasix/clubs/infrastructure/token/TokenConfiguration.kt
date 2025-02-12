@@ -6,8 +6,11 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.OctetSequenceKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
+import javax.crypto.spec.SecretKeySpec
 
 class TokenConfiguration {
     companion object {
@@ -29,6 +32,14 @@ class TokenConfiguration {
                 jwkSelector.select(JWKSet(jwk))
             }
             return NimbusJwtEncoder(jwkSource)
+        }
+
+        fun jwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder {
+            require(tokenConfigurations.secret.length >= 32) {
+                "The secret must be at least 32 characters long for HS256."
+            }
+            val keySpec = SecretKeySpec(tokenConfigurations.secret.toByteArray(), JWSAlgorithm.HS256.name)
+            return NimbusJwtDecoder.withSecretKey(keySpec).build()
         }
     }
 }

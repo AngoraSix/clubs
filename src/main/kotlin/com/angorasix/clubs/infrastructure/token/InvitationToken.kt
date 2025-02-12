@@ -7,4 +7,5 @@ class InvitationToken(
     var clubId: String,
     var tokenValue: String,
     var expirationInstant: Instant,
+    var contributorId: String? = null,
 )

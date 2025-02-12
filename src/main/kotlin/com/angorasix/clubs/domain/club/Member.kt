@@ -12,6 +12,7 @@ data class Member(
     val contributorId: String,
     val roles: Collection<String> = mutableSetOf(),
     val data: Map<String, Any> = mutableMapOf(),
+    val privateData: Map<String, Any> = mutableMapOf(),
     var status: MemberStatusValue = MemberStatusValue.INACTIVE,
 ) {
 

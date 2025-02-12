@@ -223,7 +223,6 @@ class ClubHandler(
         }
     }
 
-
     /**
      * Handler for the Invite Contributor to join a Club endpoint,
      * retrieving an empty 200 OK response if processed correctly.
@@ -245,6 +244,43 @@ class ClubHandler(
                     contributorId = null, // tech debt: Trello-93G4IaSy
                 )?.let { ServerResponse.ok().buildAndAwait() }
                     ?: resolveNotFound("Can't invite to this Club", "Club Invitation")
+            } catch (ex: RuntimeException) {
+                return resolveExceptionResponse(ex, "Club Invitation")
+            }
+        } else {
+            resolveBadRequest("Invalid Contributor", "Contributor")
+        }
+    }
+
+    /**
+     * Handler for the Invite Contributor to join a Club endpoint,
+     * retrieving an empty 200 OK response if processed correctly.
+     *
+     * @param request - HTTP `ServerRequest` object
+     * @return the `ServerResponse`
+     */
+    suspend fun addMemberFromInvitationToken(request: ServerRequest): ServerResponse {
+        val requestingContributor =
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
+        val clubId = request.pathVariable("id")
+        val tokenValue = request.pathVariable("tokenValue")
+        return if (requestingContributor is SimpleContributor) {
+            try {
+                service.addMemberFromInvitationToken(
+                    tokenValue = tokenValue,
+                    clubId = clubId,
+                    requestingContributor = requestingContributor,
+                )?.convertToDto(
+                    requestingContributor,
+                    apiConfigs,
+                    wellKnownClubConfigurations,
+                    request,
+                )?.let {
+                    ServerResponse.ok()
+                        .contentType(MediaTypes.HAL_FORMS_JSON)
+                        .bodyValueAndAwait(it)
+                }
+                    ?: resolveBadRequest("Error with invitation", "Club Invitation")
             } catch (ex: RuntimeException) {
                 return resolveExceptionResponse(ex, "Club Invitation")
             }

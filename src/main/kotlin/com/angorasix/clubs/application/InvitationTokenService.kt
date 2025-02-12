@@ -13,14 +13,16 @@ import com.angorasix.commons.infrastructure.intercommunication.dto.invitations.A
 import com.angorasix.commons.infrastructure.intercommunication.dto.messaging.A6InfraMessageDto
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.support.MessageBuilder
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
 
 class InvitationTokenService(
     private val repository: ClubRepository,
-    private val jwtEncoder: JwtEncoder,
     private val tokenConfigurations: TokenConfigurations,
     private val streamBridge: StreamBridge,
     private val amqpConfigs: AmqpConfigurations,
+    private val invitationTokenJwtEncoder: JwtEncoder,
+    private val invitationTokenJwtDecoder: JwtDecoder,
 ) {
 
     /**
@@ -36,7 +38,7 @@ class InvitationTokenService(
         val club = repository.findById(clubId)
         return if (club != null && club.isAdmin(requestingContributor.contributorId)) {
             val invitationToken = InvitationTokenUtils.createInvitationToken(
-                jwtEncoder = jwtEncoder,
+                jwtEncoder = invitationTokenJwtEncoder,
                 tokenConfigurations = tokenConfigurations,
                 email = email,
                 clubId = clubId,
@@ -69,6 +71,19 @@ class InvitationTokenService(
             )
             return invitationToken
         } else null
+    }
+
+    /**
+     * Method to create and send an [InvitationToken].
+     *
+     */
+    fun checkInvitationToken(
+        tokenValue: String,
+    ): InvitationToken? {
+        return InvitationTokenUtils.decodeToken(
+            tokenValue = tokenValue,
+            jwtDecoder = invitationTokenJwtDecoder,
+        )
     }
 }
 

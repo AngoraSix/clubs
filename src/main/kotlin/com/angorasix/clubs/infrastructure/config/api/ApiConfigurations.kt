@@ -40,6 +40,7 @@ class RoutesConfigs(
     val wellKnownPatch: Route,
     val wellKnownRegister: Route,
     val inviteContributor: Route,
+    val addMemberFromInvitation: Route,
 )
 
 class ClubActions(

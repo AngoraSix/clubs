@@ -4,10 +4,12 @@ import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.ClubFactory
 import com.angorasix.clubs.domain.club.ClubRepository
 import com.angorasix.clubs.domain.club.Member
+import com.angorasix.clubs.domain.club.MemberStatusValue
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubDescription
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
+import com.angorasix.clubs.infrastructure.security.TokenEncryptionUtil
 import com.angorasix.commons.domain.SimpleContributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.singleOrNull
@@ -20,6 +22,8 @@ import reactor.core.publisher.Flux
  */
 class ClubService(
     private val repository: ClubRepository,
+    private val invitationTokenService: InvitationTokenService,
+    private val encryptionUtils: TokenEncryptionUtil,
     private val wellKnownClubConfigurations: WellKnownClubConfigurations,
 ) {
 
@@ -113,11 +117,40 @@ class ClubService(
         }
     }
 
+    suspend fun addMemberFromInvitationToken(
+        tokenValue: String,
+        clubId: String,
+        requestingContributor: SimpleContributor,
+    ): Club? = invitationTokenService.checkInvitationToken(
+        tokenValue,
+    )?.takeUnless {
+        it.clubId != clubId ||
+            (it.contributorId != null && requestingContributor.contributorId != it.contributorId)
+    }?.let {
+        val member = Member(
+            contributorId = requestingContributor.contributorId,
+            roles = emptyList(),
+            data = mapOf("invited" to true),
+            privateData = mapOf("invitedEmail" to encryptionUtils.encrypt(it.email)),
+            status = MemberStatusValue.ACTIVE,
+        )
+        repository.addMemberToClub(
+            clubId = it.clubId,
+            member = member,
+            requestingContributor = requestingContributor,
+            fromInvitation = true,
+        )
+    }
+
     /**
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.
      *
      */
-    suspend fun getWellKnownClub(type: String, projectId: String, requestingContributor: SimpleContributor?): Club? {
+    suspend fun getWellKnownClub(
+        type: String,
+        projectId: String,
+        requestingContributor: SimpleContributor?,
+    ): Club? {
         val filter = ListClubsFilter(
             type = type,
             projectId = listOf(projectId),

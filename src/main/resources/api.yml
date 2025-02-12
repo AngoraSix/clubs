@@ -50,6 +50,13 @@ configs:
           - ${configs.api.basePaths.baseByIdRoute}
         method: POST
         path: /invitations
+      addMemberFromInvitation:
+        name: addMemberFromInvitation
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.baseByIdRoute}
+        method: POST
+        path: /invitations/{tokenValue}
     clubActions:
       addMember: addMember
       removeMember: removeMember

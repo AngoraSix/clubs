@@ -4,3 +4,7 @@ spring:
       resource-server:
         jwt:
           issuer-uri: ${A6_CLUBS_OAUTH_SECURITY_ISSUER_URI:http://localhost:10100}
+
+configs:
+  security:
+    secretKey: ${A6_CLUBS_SECURITY_SECRET_KEY}

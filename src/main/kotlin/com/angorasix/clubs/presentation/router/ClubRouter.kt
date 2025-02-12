@@ -47,6 +47,9 @@ class ClubRouter(
                 }
             }
             apiConfigs.basePaths.baseByIdRoute.nest {
+                path(apiConfigs.routes.addMemberFromInvitation.path).nest {
+                    method(apiConfigs.routes.addMemberFromInvitation.method, handler::addMemberFromInvitationToken)
+                }
                 path(apiConfigs.routes.inviteContributor.path).nest {
                     method(apiConfigs.routes.inviteContributor.method, handler::inviteContributor)
                 }
