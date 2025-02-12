@@ -44,7 +44,6 @@ class InvitationTokenService(
                 clubId = clubId,
                 contributorId = contributorId,
             )
-            println("Invitation token: $invitationToken")
             val messageData = A6InfraClubInvitation(
                 email = email,
                 club = A6InfraClubDto(
@@ -70,7 +69,9 @@ class InvitationTokenService(
                 ).build(),
             )
             return invitationToken
-        } else null
+        } else {
+            null
+        }
     }
 
     /**

@@ -29,7 +29,14 @@ val beans = beans {
         ClubSecurityConfiguration.springSecurityFilterChain(ref())
     }
     bean {
-        InvitationTokenService(ref(),ref(),ref(),ref(),ref("invitationJwtEncoder"),ref("invitationJwtDecoder"))
+        InvitationTokenService(
+            ref(),
+            ref(),
+            ref(),
+            ref(),
+            ref("invitationJwtEncoder"),
+            ref("invitationJwtDecoder"),
+        )
     }
     bean<ClubService>()
     bean<ClubHandler>()

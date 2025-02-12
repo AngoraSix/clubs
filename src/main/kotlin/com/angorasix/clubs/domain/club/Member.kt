@@ -1,7 +1,5 @@
 package com.angorasix.clubs.domain.club
 
-import java.time.Instant
-
 /**
  * <p>
  * </p>
@@ -24,15 +22,16 @@ data class Member(
     }
 }
 
-enum class MemberStatusValue(value: String) {
+enum class MemberStatusValue(val value: String) {
     ACTIVE("active"),
     INACTIVE("inactive"),
-    PENDING("pending");
+    PENDING("pending"),
+    ;
 
     fun isActive(): Boolean = this == ACTIVE
 }
 
 enum class MemberRolesValue(val value: String) {
     ADMIN("admin"),
-    CONTRIBUTOR("contributor");
+    CONTRIBUTOR("contributor"),
 }

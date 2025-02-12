@@ -50,7 +50,7 @@ class ClubFilterRepositoryImpl(val mongoOps: ReactiveMongoOperations) : ClubFilt
 private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): Query {
     val query = Query()
 
-    projectId?.let { query.addCriteria(where("projectId").`in`(*it.toTypedArray())) }
+    projectId?.let { query.addCriteria(where("projectId").`in`(it as Collection<Any>)) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
     val orCriteria = mutableListOf(
         where("admins").elemMatch(
@@ -62,16 +62,16 @@ private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): 
     if (!memberContributorId.isNullOrEmpty()) {
         orCriteria.add(
             where("members").elemMatch(
-                where("contributorId").`in`(*memberContributorId.toTypedArray()),
+                where("contributorId").`in`(memberContributorId as Collection<Any>),
             ),
         )
     }
-    query.addCriteria(Criteria().orOperator(*orCriteria.toTypedArray()))
+    query.addCriteria(Criteria().orOperator(orCriteria))
 
     adminId?.let {
         query.addCriteria(
             where("admins").elemMatch(
-                where("contributorId").`in`(*it.toTypedArray()),
+                where("contributorId").`in`(it as Collection<Any>),
             ),
         )
     }

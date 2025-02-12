@@ -114,9 +114,15 @@ suspend fun Flow<ClubDto>.convertToDto(
 }
 
 fun SimpleContributor.convertToMember(status: MemberStatusValue? = null): Member {
-    return Member(contributorId = contributorId, emptyList(), emptyMap(), emptyMap(), status ?: MemberStatusValue.INACTIVE)
+    return Member(
+        contributorId = contributorId,
+        emptyList(),
+        emptyMap(),
+        emptyMap(),
+        status ?: MemberStatusValue.INACTIVE,
+    )
 }
 
 fun Member.convertToDto(): MemberDto {
-    return MemberDto(contributorId, roles, data)
+    return MemberDto(contributorId, roles, data, status.value)
 }

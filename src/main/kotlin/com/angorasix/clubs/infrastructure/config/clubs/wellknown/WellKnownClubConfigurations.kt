@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "wellknown.configurations.clubs")
 class WellKnownClubConfigurations(
     var wellKnownClubTypes: Map<WellKnownClubTypes, String>,
-    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>
+    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
 ) {
 
     var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
@@ -24,8 +24,9 @@ fun processProperties(
 ): MutableMap<String, WellKnownClubDescription> {
     val typeToRequirement: Map<String, Class<out DescriptionRequirements>> =
         mapOf(
-            wellKnownClubTypes[WellKnownClubTypes.CONTRIBUTOR_CANDIDATES]!!  to (ContributorCandidatesRequirements::class.java),
-            )
+            wellKnownClubTypes[WellKnownClubTypes.CONTRIBUTOR_CANDIDATES]!!
+                to (ContributorCandidatesRequirements::class.java),
+        )
     return wellKnownClubDescriptions.map {
         WellKnownClubDescription(
             it,
@@ -54,10 +55,10 @@ data class RawWellKnownClubDescription(
     var open: Boolean,
     var public: Boolean,
     var social: Boolean,
-    var isCreatorMember: Boolean = false
+    var isCreatorMember: Boolean = false,
 )
 
-enum class WellKnownClubTypes{
+enum class WellKnownClubTypes {
     CONTRIBUTOR_CANDIDATES,
     PROJECT_MANAGEMENT_MEMBERS,
 }

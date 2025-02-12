@@ -64,12 +64,14 @@ data class Club @PersistenceCreator constructor(
     fun register(requestingContributor: SimpleContributor, isCreatorMember: Boolean? = false) {
         admins.add(requestingContributor)
         if (isCreatorMember == true) {
-            members.add(Member(
-                contributorId = requestingContributor.contributorId,
-                status = MemberStatusValue.ACTIVE,
-                roles = setOf(MemberRolesValue.ADMIN.value),
-                data = mapOf("creator" to true),
-            ))
+            members.add(
+                Member(
+                    contributorId = requestingContributor.contributorId,
+                    status = MemberStatusValue.ACTIVE,
+                    roles = setOf(MemberRolesValue.ADMIN.value),
+                    data = mapOf("creator" to true),
+                ),
+            )
         }
     }
 
@@ -100,7 +102,15 @@ data class Club @PersistenceCreator constructor(
      * @param requestingContributor - contributor trying to see the Club.
      */
     fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean = public
-        .or(social.and(members.any { it.contributorId == requestingContributor?.contributorId &&  it.status.isActive() }))
+        .or(
+            social.and(
+                members.any
+                {
+                    it.contributorId == requestingContributor?.contributorId &&
+                        it.status.isActive()
+                },
+            ),
+        )
         .or(isAdmin(requestingContributor?.contributorId))
 
     fun resolveAdmins(requestingContributor: SimpleContributor?): Set<SimpleContributor> =

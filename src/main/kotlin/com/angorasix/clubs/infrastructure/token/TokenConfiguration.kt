@@ -12,34 +12,35 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 import javax.crypto.spec.SecretKeySpec
 
-class TokenConfiguration {
-    companion object {
-        const val CLAIMS_CONTRIBUTOR_EMAIL = "contributorEmail"
-        const val CLAIMS_CLUB_ID = "clubId"
-        const val CLAIMS_CONTRIBUTOR_ID = "contributorId"
+private const val SECRET_LENGTH_LIMIT = 32
 
-        private const val TOKEN_KEY_ID = "clubTokenJWKId"
+object TokenConfiguration {
+    const val CLAIMS_CONTRIBUTOR_EMAIL = "contributorEmail"
+    const val CLAIMS_CLUB_ID = "clubId"
+    const val CLAIMS_CONTRIBUTOR_ID = "contributorId"
 
-        fun jwtEncoder(tokenConfigurations: TokenConfigurations): JwtEncoder {
-            require(tokenConfigurations.secret.length >= 32) {
-                "The secret must be at least 32 characters long for HS256."
-            }
-            val jwk = OctetSequenceKey.Builder(tokenConfigurations.secret.toByteArray())
-                .algorithm(JWSAlgorithm.HS256)
-                .keyID(TOKEN_KEY_ID)
-                .build()
-            val jwkSource = JWKSource<SecurityContext> { jwkSelector, _ ->
-                jwkSelector.select(JWKSet(jwk))
-            }
-            return NimbusJwtEncoder(jwkSource)
+    private const val TOKEN_KEY_ID = "clubTokenJWKId"
+
+    fun jwtEncoder(tokenConfigurations: TokenConfigurations): JwtEncoder {
+        require(tokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
+            "The secret must be at least 32 characters long for HS256."
         }
-
-        fun jwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder {
-            require(tokenConfigurations.secret.length >= 32) {
-                "The secret must be at least 32 characters long for HS256."
-            }
-            val keySpec = SecretKeySpec(tokenConfigurations.secret.toByteArray(), JWSAlgorithm.HS256.name)
-            return NimbusJwtDecoder.withSecretKey(keySpec).build()
+        val jwk = OctetSequenceKey.Builder(tokenConfigurations.secret.toByteArray())
+            .algorithm(JWSAlgorithm.HS256)
+            .keyID(TOKEN_KEY_ID)
+            .build()
+        val jwkSource = JWKSource<SecurityContext> { jwkSelector, _ ->
+            jwkSelector.select(JWKSet(jwk))
         }
+        return NimbusJwtEncoder(jwkSource)
+    }
+
+    fun jwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder {
+        require(tokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
+            "The secret must be at least 32 characters long for HS256."
+        }
+        val keySpec =
+            SecretKeySpec(tokenConfigurations.secret.toByteArray(), JWSAlgorithm.HS256.name)
+        return NimbusJwtDecoder.withSecretKey(keySpec).build()
     }
 }
