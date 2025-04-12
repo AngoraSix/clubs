@@ -32,60 +32,95 @@ fun ClubDto.resolveHypermedia(
     request: ServerRequest,
 ): ClubDto {
     val member = requestingContributor?.convertToMember()
-    val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetSingle
+    val wellKnownGetSingleRoute = apiConfigs.routes.wellKnownGetForProject
     // self
-    val selfLink = Link.of(
-        uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString(),
-    ).withRel(wellKnownGetSingleRoute.name).expand(projectId, type).withSelfRel()
+    val selfLink =
+        Link
+            .of(
+                uriBuilder(request).path(wellKnownGetSingleRoute.resolvePath()).build().toUriString(),
+            ).withRel(wellKnownGetSingleRoute.name)
+            .expand(projectId, type)
+            .withSelfRel()
     val selfLinkWithDefaultAffordance =
-        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+        Affordances
+            .of(selfLink)
+            .afford(HttpMethod.OPTIONS)
+            .withName("default")
+            .toLink()
     add(selfLinkWithDefaultAffordance)
 
     // add member
     if (member != null) {
         if (club.canAddMember(member)) {
-            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownAddMemberRoute = apiConfigs.routes.wellKnownPatchForProjectAndType
             val wellKnownAddMemberActionName = apiConfigs.clubActions.addMember
-            val addMemberLink = Link.of(
-                uriBuilder(request).path(wellKnownAddMemberRoute.resolvePath()).build()
-                    .toUriString(),
-            ).withTitle(wellKnownAddMemberActionName).withName(wellKnownAddMemberActionName)
-                .withRel(wellKnownAddMemberActionName).expand(projectId, type)
+            val addMemberLink =
+                Link
+                    .of(
+                        uriBuilder(request)
+                            .path(wellKnownAddMemberRoute.resolvePath())
+                            .build()
+                            .toUriString(),
+                    ).withTitle(wellKnownAddMemberActionName)
+                    .withName(wellKnownAddMemberActionName)
+                    .withRel(wellKnownAddMemberActionName)
+                    .expand(projectId, type)
             val addMemberAffordanceLink =
-                Affordances.of(addMemberLink).afford(wellKnownAddMemberRoute.method)
+                Affordances
+                    .of(addMemberLink)
+                    .afford(wellKnownAddMemberRoute.method)
                     .withInput(
                         wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements
                             ?: Void::class.java,
-                    ).withName(wellKnownAddMemberActionName).toLink()
+                    ).withName(wellKnownAddMemberActionName)
+                    .toLink()
             add(addMemberAffordanceLink)
         } else if (club.canRemoveMember(member)) {
-            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownPatch
+            val wellKnownRemoveMemberRoute = apiConfigs.routes.wellKnownPatchForProjectAndType
             val wellKnownRemoveMemberActionName = apiConfigs.clubActions.removeMember
-            val removeMemberLink = Link.of(
-                uriBuilder(request).path(wellKnownRemoveMemberRoute.resolvePath()).build()
-                    .toUriString(),
-            ).withTitle(wellKnownRemoveMemberActionName).withName(wellKnownRemoveMemberActionName)
-                .withRel(wellKnownRemoveMemberActionName).expand(projectId, type)
+            val removeMemberLink =
+                Link
+                    .of(
+                        uriBuilder(request)
+                            .path(wellKnownRemoveMemberRoute.resolvePath())
+                            .build()
+                            .toUriString(),
+                    ).withTitle(wellKnownRemoveMemberActionName)
+                    .withName(wellKnownRemoveMemberActionName)
+                    .withRel(wellKnownRemoveMemberActionName)
+                    .expand(projectId, type)
             val removeMemberAffordanceLink =
-                Affordances.of(removeMemberLink).afford(wellKnownRemoveMemberRoute.method)
-                    .withName(wellKnownRemoveMemberActionName).toLink()
+                Affordances
+                    .of(removeMemberLink)
+                    .afford(wellKnownRemoveMemberRoute.method)
+                    .withName(wellKnownRemoveMemberActionName)
+                    .toLink()
             add(removeMemberAffordanceLink)
         }
     }
 
     // can invite
     if (!club.open && club.isAdmin(requestingContributor?.contributorId)) {
-        val inviteContributorRoute = apiConfigs.routes.wellKnownPatch
+        val inviteContributorRoute = apiConfigs.routes.wellKnownPatchForProjectAndType
         val inviteContributorActionName = apiConfigs.clubActions.inviteContributor
-        val inviteContributorLink = Link.of(
-            uriBuilder(request).path(inviteContributorRoute.resolvePath()).build()
-                .toUriString(),
-        ).withTitle(inviteContributorActionName).withName(inviteContributorActionName)
-            .withRel(inviteContributorActionName).expand(club.id)
+        val inviteContributorLink =
+            Link
+                .of(
+                    uriBuilder(request)
+                        .path(inviteContributorRoute.resolvePath())
+                        .build()
+                        .toUriString(),
+                ).withTitle(inviteContributorActionName)
+                .withName(inviteContributorActionName)
+                .withRel(inviteContributorActionName)
+                .expand(club.id)
         val inviteContributorAffordanceLink =
-            Affordances.of(inviteContributorLink).afford(inviteContributorRoute.method)
+            Affordances
+                .of(inviteContributorLink)
+                .afford(inviteContributorRoute.method)
                 .withInput(InvitationTokenInput::class.java)
-                .withName(inviteContributorActionName).toLink()
+                .withName(inviteContributorActionName)
+                .toLink()
         add(inviteContributorAffordanceLink)
     }
     return this
@@ -94,13 +129,14 @@ fun ClubDto.resolveHypermedia(
 suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionModel<ClubDto>> {
     val dtoResources = this.toList(mutableListOf())
     val isEmpty = dtoResources.isEmpty()
-    val collectionModel = if (isEmpty) {
-        val wrappers = EmbeddedWrappers(false)
-        val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
-        CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
-    } else {
-        CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
-    }
+    val collectionModel =
+        if (isEmpty) {
+            val wrappers = EmbeddedWrappers(false)
+            val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
+            CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
+        } else {
+            CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
+        }
     return Pair(isEmpty, collectionModel)
 }
 
@@ -113,25 +149,42 @@ fun CollectionModel<ClubDto>.resolveHypermedia(
 ): CollectionModel<ClubDto> {
     val wellKnownGetAllRoute = apiConfigs.routes.wellKnownGetForProject
     // self
-    val selfLink = Link.of(
-        uriBuilder(request).path(wellKnownGetAllRoute.resolvePath()).build().toUriString(),
-    ).withRel(wellKnownGetAllRoute.name).expand(projectId).withSelfRel()
+    val selfLink =
+        Link
+            .of(
+                uriBuilder(request).path(wellKnownGetAllRoute.resolvePath()).build().toUriString(),
+            ).withRel(wellKnownGetAllRoute.name)
+            .expand(projectId)
+            .withSelfRel()
     val selfLinkWithDefaultAffordance =
-        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+        Affordances
+            .of(selfLink)
+            .afford(HttpMethod.OPTIONS)
+            .withName("default")
+            .toLink()
     add(selfLinkWithDefaultAffordance)
     // register wellknown clubs
     if (requestingContributor != null && requestingContributor.isAdminHint == true && isEmpty) {
-        val wellKnownRegisterAllRoute = apiConfigs.routes.wellKnownRegister
+        val wellKnownRegisterAllRoute = apiConfigs.routes.wellKnownRegisterForProject
         val wellKnownRegisterAllActionName = apiConfigs.clubActions.registerAll
-        val registerAllWellknownLink = Link.of(
-            uriBuilder(request).path(wellKnownRegisterAllRoute.resolvePath()).build()
-                .toUriString(),
-        ).withTitle(wellKnownRegisterAllActionName).withName(wellKnownRegisterAllActionName)
-            .withRel(wellKnownRegisterAllActionName).expand(projectId)
+        val registerAllWellknownLink =
+            Link
+                .of(
+                    uriBuilder(request)
+                        .path(wellKnownRegisterAllRoute.resolvePath())
+                        .build()
+                        .toUriString(),
+                ).withTitle(wellKnownRegisterAllActionName)
+                .withName(wellKnownRegisterAllActionName)
+                .withRel(wellKnownRegisterAllActionName)
+                .expand(projectId)
         val registerAllAffordanceLink =
-            Affordances.of(registerAllWellknownLink).afford(wellKnownRegisterAllRoute.method)
+            Affordances
+                .of(registerAllWellknownLink)
+                .afford(wellKnownRegisterAllRoute.method)
                 .withInput(AdminContributorRequirements::class.java)
-                .withName(wellKnownRegisterAllActionName).toLink()
+                .withName(wellKnownRegisterAllActionName)
+                .toLink()
         add(registerAllAffordanceLink)
     }
     return this
@@ -145,13 +198,21 @@ fun CollectionModel<ClubDto>.resolveHypermedia(
 ): CollectionModel<ClubDto> {
     val wellKnownSearchRoute = apiConfigs.routes.wellKnownSearch
     // self
-    val selfLink = Link.of(
-        uriBuilder(request).path(wellKnownSearchRoute.resolvePath())
-            .queryParams(filter.toMultiValueMap()).build()
-            .toUriString(),
-    ).withSelfRel()
+    val selfLink =
+        Link
+            .of(
+                uriBuilder(request)
+                    .path(wellKnownSearchRoute.resolvePath())
+                    .queryParams(filter.toMultiValueMap())
+                    .build()
+                    .toUriString(),
+            ).withSelfRel()
     val selfLinkWithDefaultAffordance =
-        Affordances.of(selfLink).afford(HttpMethod.OPTIONS).withName("default").toLink()
+        Affordances
+            .of(selfLink)
+            .afford(HttpMethod.OPTIONS)
+            .withName("default")
+            .toLink()
     add(selfLinkWithDefaultAffordance)
     if (requestingContributor != null && requestingContributor.isAdminHint == true) {
         // here goes admin-specific hypermedia
@@ -159,7 +220,10 @@ fun CollectionModel<ClubDto>.resolveHypermedia(
     return this
 }
 
-fun uriBuilder(request: ServerRequest) = request.requestPath().contextPath().let {
-    UriComponentsBuilder.fromHttpRequest(request.exchange().request).replacePath(it.toString()) //
-        .replaceQuery("")
-}
+fun uriBuilder(request: ServerRequest) =
+    request.requestPath().contextPath().let {
+        UriComponentsBuilder
+            .fromHttpRequest(request.exchange().request)
+            .replacePath(it.toString()) //
+            .replaceQuery("")
+    }

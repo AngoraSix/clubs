@@ -9,12 +9,14 @@ wellknown:
           open: true
           public: false
           social: false
+          isProjectClub: true
           requirements: # As reference, not used because HAL-FORM needs class
             contact: text
         - type: ${wellknown.configurations.clubs.wellKnownClubTypes.PROJECT_MANAGEMENT_MEMBERS}
           open: false
           public: false
           social: true
+          isProjectManagementClub: true
           isCreatorMember: true
   roles:
     admin: WELLKNOWN_ADMIN

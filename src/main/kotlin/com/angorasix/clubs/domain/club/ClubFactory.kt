@@ -9,20 +9,20 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubDe
  * @author rozagerardo
  */
 object ClubFactory {
-
     fun fromDescription(
         clubDescription: WellKnownClubDescription,
         projectId: String?,
-    ): Club {
-        return Club(
-            "$projectId+${clubDescription.type}",
-            clubDescription.type,
-            projectId,
-            mutableSetOf(),
-            mutableSetOf(),
-            clubDescription.open,
-            clubDescription.public,
-            clubDescription.social,
+        projectManagementId: String?,
+    ): Club =
+        Club(
+            name = "$projectId+${clubDescription.type}",
+            type = clubDescription.type,
+            projectId = projectId,
+            projectManagementId = projectManagementId,
+            members = mutableSetOf(),
+            admins = mutableSetOf(),
+            open = clubDescription.open,
+            public = clubDescription.public,
+            social = clubDescription.social,
         )
-    }
 }
