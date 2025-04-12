@@ -35,7 +35,7 @@ class RoutesConfigs(
     val wellKnownGetForProjectAndType: Route,
     val wellKnownGetForManagementAndType: Route,
     val wellKnownGetForProject: Route,
-    val wellKnownGetForProjectManagement: Route,
+    val wellKnownGetForManagement: Route,
     val wellKnownSearch: Route,
     val wellKnownPatchForProjectAndType: Route,
     val wellKnownPatchForManagementAndType: Route,
@@ -46,8 +46,11 @@ class RoutesConfigs(
 )
 
 class ClubActions(
-    val addMember: String,
-    val removeMember: String,
-    val registerAll: String,
+    val addMemberForProject: String,
+    val addMemberForManagement: String,
+    val removeMemberForProject: String,
+    val removeMemberForManagement: String,
+    val registerAllForProject: String,
+    val registerAllForManagement: String,
     val inviteContributor: String,
 )

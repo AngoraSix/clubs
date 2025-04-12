@@ -1,12 +1,14 @@
 package com.angorasix.clubs.infrastructure.security
 
 import com.angorasix.clubs.infrastructure.config.security.SecurityConfigurations
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.web.server.SecurityWebFilterChain
 import java.security.MessageDigest
-import java.util.*
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
@@ -19,10 +21,10 @@ import javax.crypto.spec.SecretKeySpec
  *
  * @author rozagerardo
  */
-object ClubSecurityConfiguration {
-
-    fun tokenEncryptionUtils(securityConfigs: SecurityConfigurations): TokenEncryptionUtil =
-        TokenEncryptionUtil(securityConfigs)
+@Configuration
+class SecurityConfiguration {
+    @Bean
+    fun tokenEncryptionUtils(securityConfigs: SecurityConfigurations): TokenEncryptionUtil = TokenEncryptionUtil(securityConfigs)
 
     /**
      *
@@ -33,15 +35,18 @@ object ClubSecurityConfiguration {
      * @param http Spring's customizable ServerHttpSecurity bean
      * @return fully configured SecurityWebFilterChain
      */
+    @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
-        http.authorizeExchange { exchanges: ServerHttpSecurity.AuthorizeExchangeSpec ->
-            exchanges
-                .pathMatchers(
-                    HttpMethod.GET,
-                    "/clubs/**",
-                ).permitAll()
-                .anyExchange().authenticated()
-        }.oauth2ResourceServer { oauth2 -> oauth2.jwt(Customizer.withDefaults()) }
+        http
+            .authorizeExchange { exchanges: ServerHttpSecurity.AuthorizeExchangeSpec ->
+                exchanges
+                    .pathMatchers(
+                        HttpMethod.GET,
+                        "/clubs/**",
+                    ).permitAll()
+                    .anyExchange()
+                    .authenticated()
+            }.oauth2ResourceServer { oauth2 -> oauth2.jwt(Customizer.withDefaults()) }
         return http.build()
     }
 }
@@ -50,8 +55,9 @@ private const val ALG = "SHA-256"
 
 private const val KEY_SIZE_LIMIT = 16
 
-class TokenEncryptionUtil(private val securityConfigs: SecurityConfigurations) {
-
+class TokenEncryptionUtil(
+    private val securityConfigs: SecurityConfigurations,
+) {
     fun encrypt(token: String): String {
         val cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM)
         val secretKey: SecretKey = getAesKeyFromString(securityConfigs.secretKey)

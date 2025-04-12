@@ -10,7 +10,7 @@ import com.angorasix.commons.presentation.dto.PatchOperationSpec
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
-import java.time.ZonedDateTime
+import java.time.Instant
 
 /**
  *
@@ -31,19 +31,22 @@ data class ClubDto(
     val type: String,
     val description: String? = null,
     val projectId: String? = null,
+    val projectManagementId: String? = null,
     val members: MutableSet<MemberDto> = mutableSetOf(),
     val admins: Set<SimpleContributor> = emptySet(),
     val open: Boolean? = null,
     val public: Boolean? = null,
     val social: Boolean? = null,
-    val createdAt: ZonedDateTime? = null,
+    val createdInstant: Instant? = null,
 ) : RepresentationModel<ClubDto>()
 
 data class InvitationTokenInput(
     var email: String,
 )
 
-enum class SupportedPatchOperations(val op: PatchOperationSpec) {
+enum class SupportedPatchOperations(
+    val op: PatchOperationSpec,
+) {
     REMOVE(
         object : PatchOperationSpec {
             override fun supportsPatchOperation(operation: PatchOperation): Boolean =
@@ -54,8 +57,9 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
-                var memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.contributorId, emptyList(), emptyMap())
+                var memberValue =
+                    objectMapper.treeToValue(operation.value, Member::class.java)
+                        ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return RemoveMember(memberValue)
             }
         },
@@ -70,8 +74,9 @@ enum class SupportedPatchOperations(val op: PatchOperationSpec) {
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
-                val memberValue = objectMapper.treeToValue(operation.value, Member::class.java)
-                    ?: Member(contributor.contributorId, emptyList(), emptyMap())
+                val memberValue =
+                    objectMapper.treeToValue(operation.value, Member::class.java)
+                        ?: Member(contributor.contributorId, emptyList(), emptyMap())
                 return AddMember(memberValue)
             }
         },

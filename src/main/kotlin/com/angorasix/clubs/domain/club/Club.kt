@@ -3,8 +3,7 @@ package com.angorasix.clubs.domain.club
 import com.angorasix.commons.domain.SimpleContributor
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.Instant
 
 /**
  * Club Aggregate Root.
@@ -27,7 +26,7 @@ data class Club
         val public: Boolean, // visible for the rest
         val social: Boolean, // members can interact / see themselves
         var description: String?,
-        val createdAt: ZonedDateTime,
+        val createdInstant: Instant,
     ) {
         /**
          * The final constructor that sets all initial fields.
@@ -44,7 +43,6 @@ data class Club
             public: Boolean,
             social: Boolean,
             description: String? = null,
-            zone: ZoneId? = ZoneId.systemDefault(),
         ) : this(
             null,
             name,
@@ -57,7 +55,7 @@ data class Club
             public,
             social,
             description,
-            ZonedDateTime.now(zone),
+            Instant.now(),
         )
 
         /**

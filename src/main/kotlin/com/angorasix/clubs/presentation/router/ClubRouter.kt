@@ -46,7 +46,7 @@ class ClubRouter(
                             method(apiConfigs.routes.wellKnownPatchForManagementAndType.method, wellKnownClubsHandler::patchWellKnownClub)
                         }
                         method(apiConfigs.routes.wellKnownRegisterForManagement.method, wellKnownClubsHandler::registerWellKnownClubs)
-                        method(apiConfigs.routes.wellKnownGetForProjectManagement.method, wellKnownClubsHandler::getWellKnownClubs)
+                        method(apiConfigs.routes.wellKnownGetForManagement.method, wellKnownClubsHandler::getWellKnownClubs)
                     }
                     method(apiConfigs.routes.wellKnownSearch.method, wellKnownClubsHandler::searchWellKnownClubs)
                 }

@@ -138,15 +138,15 @@ class ClubService(
      */
     suspend fun getWellKnownClub(
         type: String,
-        projectId: String,
-        projectManagementId: String,
+        projectId: String?,
+        projectManagementId: String?,
         requestingContributor: SimpleContributor?,
     ): Club? {
         val filter =
             ListClubsFilter(
                 type = type,
-                projectId = listOf(projectId),
-                projectManagementId = listOf(projectManagementId),
+                projectId = projectId?.let(::listOf),
+                projectManagementId = projectManagementId?.let(::listOf),
             )
         return repository.findUsingFilter(filter, requestingContributor).singleOrNull()
     }
