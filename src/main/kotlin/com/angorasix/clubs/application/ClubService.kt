@@ -26,7 +26,6 @@ class ClubService(
     private val encryptionUtils: TokenEncryptionUtil,
     private val wellKnownClubConfigurations: WellKnownClubConfigurations,
 ) {
-
     /**
      * Method to register all well-known [Club]s for a Project.
      * New clubs will be created, with the requesting contributor as Admin.
@@ -34,25 +33,32 @@ class ClubService(
      */
     suspend fun registerAllWellKnownClub(
         requestingContributor: SimpleContributor,
-        projectId: String,
-    ): List<Club> {
-        return wellKnownClubConfigurations.wellKnownClubDescriptions.values.map { description ->
+        projectId: String?,
+        projectManagementId: String?,
+    ): List<Club> =
+        wellKnownClubConfigurations.wellKnownClubDescriptions.values.mapNotNull { description ->
             repository.findByTypeAndProjectId(description.type, projectId)
-                ?: registerNewWellKnownClub(description, projectId, requestingContributor)
+                ?: registerNewWellKnownClub(description, projectId, projectManagementId, requestingContributor)
         }
-    }
 
     private suspend fun registerNewWellKnownClub(
         description: WellKnownClubDescription,
-        projectId: String,
+        projectId: String?,
+        projectManagementId: String?,
         requestingContributor: SimpleContributor,
-    ): Club {
-        val newWellKnownClub = ClubFactory.fromDescription(
-            description,
-            projectId,
-        )
-        newWellKnownClub.register(requestingContributor, description.isCreatorMember)
-        return repository.save(newWellKnownClub)
+    ): Club? {
+        val newWellKnownClub =
+            ClubFactory.fromDescription(
+                description,
+                projectId,
+                projectManagementId,
+            )
+        return if (description.isProjectClub && projectId != null || description.isProjectManagementClub && projectManagementId != null) {
+            newWellKnownClub.register(requestingContributor, description.isCreatorMember)
+            repository.save(newWellKnownClub)
+        } else {
+            null
+        }
     }
 
     /**
@@ -74,73 +80,57 @@ class ClubService(
         requestingContributor: SimpleContributor,
         type: String,
         projectId: String?,
+        projectManagementId: String?,
         modificationOperations: List<ClubModification<out Any>>,
     ): Club? {
-        val club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
-                ClubFactory.fromDescription(
-                    it,
-                    projectId,
-                )
+        val club =
+            repository.findByTypeAndProjectId(type, projectId)
+                ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
+                    ClubFactory.fromDescription(
+                        it,
+                        projectId,
+                        projectManagementId,
+                    )
+                }
+        val updatedClub =
+            club?.let {
+                modificationOperations.fold(it) { accumulatedClub, op ->
+                    op.modify(
+                        requestingContributor,
+                        accumulatedClub,
+                    )
+                }
             }
-        val updatedClub = club?.let {
-            modificationOperations.fold(it) { accumulatedClub, op ->
-                op.modify(
-                    requestingContributor,
-                    accumulatedClub,
-                )
-            }
-        }
         return updatedClub?.let { repository.save(updatedClub) }
-    }
-
-    /**
-     * Method to add a member to a [Club].
-     * If the club is a well-known club, then it will be created before adding the member.
-     *
-     */
-    suspend fun updateWellKnownClub(
-        member: Member,
-        type: String,
-        projectId: String?,
-        updatedClub: Club,
-    ): Club? {
-        val club = repository.findByTypeAndProjectId(type, projectId)
-            ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
-                ClubFactory.fromDescription(
-                    it,
-                    projectId,
-                )
-            }
-        return club?.update(member, updatedClub)?.let {
-            repository.save(it)
-        }
     }
 
     suspend fun addMemberFromInvitationToken(
         tokenValue: String,
         clubId: String,
         requestingContributor: SimpleContributor,
-    ): Club? = invitationTokenService.checkInvitationToken(
-        tokenValue,
-    )?.takeUnless {
-        it.clubId != clubId ||
-            (it.contributorId != null && requestingContributor.contributorId != it.contributorId)
-    }?.let {
-        val member = Member(
-            contributorId = requestingContributor.contributorId,
-            roles = emptyList(),
-            data = mapOf("invited" to true),
-            privateData = mapOf("invitedEmail" to encryptionUtils.encrypt(it.email)),
-            status = MemberStatusValue.ACTIVE,
-        )
-        repository.addMemberToClub(
-            clubId = it.clubId,
-            member = member,
-            requestingContributor = requestingContributor,
-            fromInvitation = true,
-        )
-    }
+    ): Club? =
+        invitationTokenService
+            .checkInvitationToken(
+                tokenValue,
+            )?.takeUnless {
+                it.clubId != clubId ||
+                    (it.contributorId != null && requestingContributor.contributorId != it.contributorId)
+            }?.let {
+                val member =
+                    Member(
+                        contributorId = requestingContributor.contributorId,
+                        roles = emptyList(),
+                        data = mapOf("invited" to true),
+                        privateData = mapOf("invitedEmail" to encryptionUtils.encrypt(it.email)),
+                        status = MemberStatusValue.ACTIVE,
+                    )
+                repository.addMemberToClub(
+                    clubId = it.clubId,
+                    member = member,
+                    requestingContributor = requestingContributor,
+                    fromInvitation = true,
+                )
+            }
 
     /**
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.
@@ -149,12 +139,15 @@ class ClubService(
     suspend fun getWellKnownClub(
         type: String,
         projectId: String,
+        projectManagementId: String,
         requestingContributor: SimpleContributor?,
     ): Club? {
-        val filter = ListClubsFilter(
-            type = type,
-            projectId = listOf(projectId),
-        )
+        val filter =
+            ListClubsFilter(
+                type = type,
+                projectId = listOf(projectId),
+                projectManagementId = listOf(projectManagementId),
+            )
         return repository.findUsingFilter(filter, requestingContributor).singleOrNull()
     }
 
@@ -202,14 +195,16 @@ class ClubService(
             { set1: Set<Member>, set2: Set<Member> -> (set1.size == 1) xor (set2.size == 1) }
         val anyContainsUpdatingMember =
             { set1: Set<Member>, set2: Set<Member>, member: Member ->
-                set1.contains(updatingMember) || set2.contains(
-                    member,
-                )
+                set1.contains(updatingMember) ||
+                    set2.contains(
+                        member,
+                    )
             }
-        return bothHaveJustOneUpdatedMember(diff1, diff2) && anyContainsUpdatingMember(
-            diff1,
-            diff2,
-            updatingMember,
-        )
+        return bothHaveJustOneUpdatedMember(diff1, diff2) &&
+            anyContainsUpdatingMember(
+                diff1,
+                diff2,
+                updatingMember,
+            )
     }
 }

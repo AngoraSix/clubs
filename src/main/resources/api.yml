@@ -3,60 +3,103 @@ configs:
     basePaths:
       clubs: clubs
       baseWellKnown: "/well-known"
-      baseListCrudRoute: ""
       baseByIdRoute: "/{id}"
-      baseByProjectId: "/{projectId}"
-      baseByProjectIdAndType: "/{projectId}/{type}"
+      baseByProjectId: "/project/{projectId}"
+      baseByManagementId: "/project-management/{projectManagementId}"
+      baseByClubType: "/{type}"
+      baseInvitations: "/invitations"
     routes:
-      wellKnownGetSingle:
-        name: wellknownSingle
+      wellKnownGetForProjectAndType:
+        name: wellKnownGetForProjectAndType
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.baseWellKnown}
+          - ${configs.api.basePaths.baseByProjectIdAndType}
+          - ${configs.api.basePaths.baseByClubType}
+        method: GET
+        path: ""
+      wellKnownGetForManagementAndType:
+        name: wellKnownGetForManagementAndType
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByManagementId}
+          - ${configs.api.basePaths.baseByClubType}
         method: GET
-        path: ${configs.api.basePaths.baseByProjectIdAndType}
+        path: ""
       wellKnownGetForProject:
         name: wellknownForProject
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByProjectId}
         method: GET
-        path: ${configs.api.basePaths.baseByProjectId}
+        path: ""
+      wellKnownGetForProjectManagement:
+        name: wellKnownGetForProjectManagement
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByManagementId}
+        method: GET
+        path: ""
       wellKnownSearch:
         name: wellknownSearch
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
         method: GET
-        path: ${configs.api.basePaths.baseListCrudRoute}
-      wellKnownPatch:
-        name: clubPatch
+        path: ""
+      wellKnownPatchForProjectAndType:
+        name: wellKnownPatchForProjectAndType
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByProjectId}
+          - ${configs.api.basePaths.baseByClubType}
         method: PATCH
-        path: ${configs.api.basePaths.baseByProjectIdAndType}
-      wellKnownRegister:
-        name: wellKnownRegister
+        path: ""
+      wellKnownPatchForManagementAndType:
+        name: wellKnownPatchForProjectAndType
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByManagementId}
+          - ${configs.api.basePaths.baseByClubType}
+        method: PATCH
+        path: ""
+      wellKnownRegisterForProject:
+        name: wellKnownRegisterForProject
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByProjectId}
         method: POST
-        path: ${configs.api.basePaths.baseByProjectId}
+        path: ""
+      wellKnownRegisterForManagement:
+        name: wellKnownRegisterForManagement
+        basePaths:
+          - ${configs.api.basePaths.clubs}
+          - ${configs.api.basePaths.wellKnown}
+          - ${configs.api.basePaths.baseByManagementId}
+        method: POST
+        path: ""
       inviteContributor:
         name: inviteContributor
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.baseByIdRoute}
+          - ${configs.api.basePaths.baseInvitations}
         method: POST
-        path: /invitations
-      addMemberFromInvitation:
-        name: addMemberFromInvitation
+        path: ""
+      addMemberFromInvitationToken:
+        name: addMemberFromInvitationToken
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.baseByIdRoute}
+          - ${configs.api.basePaths.baseInvitations}
         method: POST
-        path: /invitations/{tokenValue}
+        path: "{tokenValue}"
     clubActions:
       addMember: addMember
       removeMember: removeMember

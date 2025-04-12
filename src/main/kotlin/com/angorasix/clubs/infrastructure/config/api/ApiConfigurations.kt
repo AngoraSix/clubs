@@ -13,13 +13,10 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty
  */
 @ConfigurationProperties(prefix = "configs.api")
 class ApiConfigs(
-
     @NestedConfigurationProperty
     var routes: RoutesConfigs,
-
     @NestedConfigurationProperty
     var basePaths: BasePathConfigs,
-
     @NestedConfigurationProperty
     var clubActions: ClubActions,
 )
@@ -27,20 +24,25 @@ class ApiConfigs(
 class BasePathConfigs(
     val clubs: String,
     val baseWellKnown: String,
-    val baseListCrudRoute: String,
     val baseByIdRoute: String,
     val baseByProjectId: String,
-    val baseByProjectIdAndType: String,
+    val baseByManagementId: String,
+    val baseByClubType: String,
+    val baseInvitations: String,
 )
 
 class RoutesConfigs(
-    val wellKnownGetSingle: Route,
+    val wellKnownGetForProjectAndType: Route,
+    val wellKnownGetForManagementAndType: Route,
     val wellKnownGetForProject: Route,
+    val wellKnownGetForProjectManagement: Route,
     val wellKnownSearch: Route,
-    val wellKnownPatch: Route,
-    val wellKnownRegister: Route,
+    val wellKnownPatchForProjectAndType: Route,
+    val wellKnownPatchForManagementAndType: Route,
+    val wellKnownRegisterForProject: Route,
+    val wellKnownRegisterForManagement: Route,
     val inviteContributor: Route,
-    val addMemberFromInvitation: Route,
+    val addMemberFromInvitationToken: Route,
 )
 
 class ClubActions(

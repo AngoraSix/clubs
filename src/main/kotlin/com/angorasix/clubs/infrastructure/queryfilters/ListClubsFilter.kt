@@ -11,6 +11,7 @@ import org.springframework.util.MultiValueMap
  */
 data class ListClubsFilter(
     val projectId: Collection<String>? = null,
+    val projectManagementId: Collection<String>? = null,
     val type: String? = null,
     val memberContributorId: Collection<String>? = null,
     val adminId: Collection<String>? = null,
@@ -18,6 +19,7 @@ data class ListClubsFilter(
     fun toMultiValueMap(): MultiValueMap<String, String> {
         val multiMap: MultiValueMap<String, String> = LinkedMultiValueMap()
         multiMap.add("projectId", projectId?.joinToString(","))
+        multiMap.add("projectManagementId", projectManagementId?.joinToString(","))
         multiMap.add("type", type)
         multiMap.add("adminId", memberContributorId?.joinToString(","))
         multiMap.add("adminId", adminId?.joinToString(","))
@@ -25,13 +27,13 @@ data class ListClubsFilter(
     }
 
     companion object {
-        fun fromMultiValueMap(multiMap: MultiValueMap<String, String>): ListClubsFilter {
-            return ListClubsFilter(
+        fun fromMultiValueMap(multiMap: MultiValueMap<String, String>): ListClubsFilter =
+            ListClubsFilter(
                 multiMap.getFirst("projectId")?.split(","),
+                multiMap.getFirst("projectManagementId")?.split(","),
                 multiMap.getFirst("type"),
                 multiMap.getFirst("memberContributorId")?.split(","),
                 multiMap.getFirst("adminId")?.split(","),
             )
-        }
     }
 }

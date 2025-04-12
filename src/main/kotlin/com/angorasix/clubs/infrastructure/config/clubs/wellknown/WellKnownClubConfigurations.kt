@@ -13,7 +13,6 @@ class WellKnownClubConfigurations(
     var wellKnownClubTypes: Map<WellKnownClubTypes, String>,
     wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
 ) {
-
     var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
         processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
 }
@@ -27,13 +26,13 @@ fun processProperties(
             wellKnownClubTypes[WellKnownClubTypes.CONTRIBUTOR_CANDIDATES]!!
                 to (ContributorCandidatesRequirements::class.java),
         )
-    return wellKnownClubDescriptions.map {
-        WellKnownClubDescription(
-            it,
-            typeToRequirement[it.type],
-        )
-    }
-        .associateBy {
+    return wellKnownClubDescriptions
+        .map {
+            WellKnownClubDescription(
+                it,
+                typeToRequirement[it.type],
+            )
+        }.associateBy {
             it.type
         } as MutableMap<String, WellKnownClubDescription>
 }
@@ -47,6 +46,8 @@ class WellKnownClubDescription(
     var public: Boolean = rawDescription.public
     var social: Boolean = rawDescription.social
     var isCreatorMember: Boolean = rawDescription.isCreatorMember
+    var isProjectClub: Boolean = rawDescription.isProjectClub
+    var isProjectManagementClub: Boolean = rawDescription.isProjectManagementClub
     var requirements: Class<out DescriptionRequirements>? = mappedRequirements
 }
 
@@ -56,6 +57,8 @@ data class RawWellKnownClubDescription(
     var public: Boolean,
     var social: Boolean,
     var isCreatorMember: Boolean = false,
+    var isProjectClub: Boolean = false,
+    var isProjectManagementClub: Boolean = false,
 )
 
 enum class WellKnownClubTypes {
@@ -65,6 +68,10 @@ enum class WellKnownClubTypes {
 
 interface DescriptionRequirements
 
-data class ContributorCandidatesRequirements(var contact: String) : DescriptionRequirements
+data class ContributorCandidatesRequirements(
+    var contact: String,
+) : DescriptionRequirements
 
-data class AdminContributorRequirements(var isAdmin: Boolean) : DescriptionRequirements
+data class AdminContributorRequirements(
+    var isAdmin: Boolean,
+) : DescriptionRequirements
