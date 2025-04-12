@@ -21,22 +21,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
  *
  * @author rozagerardo
  */
-fun Club.convertToDto(): ClubDto {
-    return ClubDto(
-        id,
-        name,
-        type,
-        description,
-        projectId,
-        members.map { it.convertToDto() }.toMutableSet(),
-        mutableSetOf(),
-        open,
-        public,
-        social,
-        createdAt,
-    )
-}
-
 fun Club.convertToDto(
     contributor: SimpleContributor?,
     apiConfigs: ApiConfigs,
@@ -50,10 +34,12 @@ fun Club.convertToDto(
         type,
         description,
         projectId,
+        projectManagementId,
         if (showAllData) {
             members.map { it.convertToDto() }.toMutableSet()
         } else {
-            members.filter { it.contributorId == contributor?.contributorId }
+            members
+                .filter { it.contributorId == contributor?.contributorId }
                 .map { it.convertToDto() }
                 .toMutableSet()
         },
@@ -61,36 +47,38 @@ fun Club.convertToDto(
         if (showAllData) open else null,
         if (showAllData) public else null,
         if (showAllData) social else null,
-        if (showAllData) createdAt else null,
+        if (showAllData) createdInstant else null,
+    ).resolveHypermedia(
+        contributor,
+        this,
+        apiConfigs,
+        wellKnownClubConfigurations,
+        request,
     )
-        .resolveHypermedia(
-            contributor,
-            this,
-            apiConfigs,
-            wellKnownClubConfigurations,
-            request,
-        )
 }
 
 suspend fun Flow<ClubDto>.convertToDto(
     contributor: SimpleContributor?,
-    projectId: String,
+    projectId: String?,
+    projectManagementId: String?,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
 ): CollectionModel<ClubDto> {
     // Fix this when Spring HATEOAS provides consistent support for reactive/coroutines
     val dtoResources = this.toList(mutableListOf())
     val isEmpty = dtoResources.isNullOrEmpty()
-    val collectionModel = if (isEmpty) {
-        val wrappers = EmbeddedWrappers(false)
-        val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
-        CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
-    } else {
-        CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
-    }
+    val collectionModel =
+        if (isEmpty) {
+            val wrappers = EmbeddedWrappers(false)
+            val wrapper: EmbeddedWrapper = wrappers.emptyCollectionOf(ClubDto::class.java)
+            CollectionModel.of(listOf(wrapper)) as CollectionModel<ClubDto>
+        } else {
+            CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
+        }
     return collectionModel.resolveHypermedia(
         contributor,
         projectId,
+        projectManagementId,
         apiConfigs,
         request,
         isEmpty,
@@ -113,16 +101,13 @@ suspend fun Flow<ClubDto>.convertToDto(
     )
 }
 
-fun SimpleContributor.convertToMember(status: MemberStatusValue? = null): Member {
-    return Member(
+fun SimpleContributor.convertToMember(status: MemberStatusValue? = null): Member =
+    Member(
         contributorId = contributorId,
         emptyList(),
         emptyMap(),
         emptyMap(),
         status ?: MemberStatusValue.INACTIVE,
     )
-}
 
-fun Member.convertToDto(): MemberDto {
-    return MemberDto(contributorId, roles, data, status.value)
-}
+fun Member.convertToDto(): MemberDto = MemberDto(contributorId, roles, data, status.value)

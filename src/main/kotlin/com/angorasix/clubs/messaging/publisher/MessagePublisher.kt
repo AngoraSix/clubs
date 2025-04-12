@@ -1,4 +1,4 @@
-package messaging.publisher
+package com.angorasix.clubs.messaging.publisher
 
 import com.angorasix.clubs.infrastructure.config.amqp.AmqpConfigurations
 import com.angorasix.clubs.infrastructure.token.InvitationToken

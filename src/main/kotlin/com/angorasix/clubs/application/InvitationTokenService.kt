@@ -4,10 +4,10 @@ import com.angorasix.clubs.domain.club.ClubRepository
 import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
 import com.angorasix.clubs.infrastructure.token.InvitationToken
 import com.angorasix.clubs.infrastructure.token.InvitationTokenUtils
+import com.angorasix.clubs.messaging.publisher.MessagePublisher
 import com.angorasix.commons.domain.DetailedContributor
 import com.angorasix.commons.infrastructure.intercommunication.dto.club.UserInvited
 import com.angorasix.commons.infrastructure.intercommunication.dto.domainresources.A6InfraClubDto
-import messaging.publisher.MessagePublisher
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
 

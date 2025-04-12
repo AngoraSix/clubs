@@ -12,7 +12,7 @@
   <parent>
     <artifactId>parent-pom-spring-kotlin</artifactId>
     <groupId>com.angorasix</groupId>
-    <version>0.2.2</version>
+    <version>0.3.3-SNAPSHOT</version>
   </parent>
 
   <properties>

@@ -35,8 +35,8 @@ configs:
           - ${configs.api.basePaths.baseByProjectId}
         method: GET
         path: ""
-      wellKnownGetForProjectManagement:
-        name: wellKnownGetForProjectManagement
+      wellKnownGetForManagement:
+        name: wellKnownGetForManagement
         basePaths:
           - ${configs.api.basePaths.clubs}
           - ${configs.api.basePaths.wellKnown}
@@ -101,7 +101,10 @@ configs:
         method: POST
         path: "{tokenValue}"
     clubActions:
-      addMember: addMember
-      removeMember: removeMember
-      registerAll: registerAll
+      addMemberForProject: addMemberForProject
+      addMemberForManagement: addMemberForManagement
+      removeMemberForProject: removeMemberForProject
+      removeMemberForManagement: removeMemberForManagement
+      registerAllForProject: registerAllForProject
+      registerAllForManagement: registerAllForManagement
       inviteContributor: inviteContributor
