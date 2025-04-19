@@ -16,6 +16,7 @@ import com.angorasix.clubs.presentation.router.ClubRouter
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.jwt.JwtDecoder
@@ -32,11 +33,17 @@ class ServiceConfiguration {
     @Bean
     fun invitationTokenService(
         repository: ClubRepository,
-        messagePublisher: MessagePublisher,
+        applicationEventPublisher: ApplicationEventPublisher,
         tokenConfigurations: TokenConfigurations,
         @Qualifier("invitationTokenJwtEncoder") invitationTokenJwtEncoder: JwtEncoder,
         @Qualifier("invitationTokenJwtDecoder") invitationTokenJwtDecoder: JwtDecoder,
-    ) = InvitationTokenService(repository, messagePublisher, tokenConfigurations, invitationTokenJwtEncoder, invitationTokenJwtDecoder)
+    ) = InvitationTokenService(
+        repository,
+        applicationEventPublisher,
+        tokenConfigurations,
+        invitationTokenJwtEncoder,
+        invitationTokenJwtDecoder,
+    )
 
     @Bean
     fun clubService(
