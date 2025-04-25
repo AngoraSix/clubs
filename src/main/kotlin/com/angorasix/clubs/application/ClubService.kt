@@ -33,8 +33,8 @@ class ClubService(
      */
     suspend fun registerAllWellKnownClub(
         requestingContributor: SimpleContributor,
-        projectId: String?,
-        projectManagementId: String?,
+        projectId: String? = null,
+        projectManagementId: String? = null,
     ): List<Club> =
         wellKnownClubConfigurations.wellKnownClubDescriptions.values.mapNotNull { description ->
             repository.findByTypeAndProjectId(description.type, projectId)
@@ -53,6 +53,7 @@ class ClubService(
                 projectId,
                 projectManagementId,
             )
+
         return if (description.isProjectClub && projectId != null || description.isProjectManagementClub && projectManagementId != null) {
             newWellKnownClub.register(requestingContributor, description.isCreatorMember)
             repository.save(newWellKnownClub)

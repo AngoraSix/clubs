@@ -9,6 +9,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubCo
 import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
 import com.angorasix.clubs.infrastructure.security.TokenEncryptionUtil
 import com.angorasix.clubs.infrastructure.token.TokenConfiguration
+import com.angorasix.clubs.messaging.listener.handler.MessagingHandler
 import com.angorasix.clubs.messaging.publisher.MessagePublisher
 import com.angorasix.clubs.presentation.handler.InvitationsHandler
 import com.angorasix.clubs.presentation.handler.WellKnownClubHandler
@@ -75,6 +76,12 @@ class ServiceConfiguration {
         invitationsHandler: InvitationsHandler,
         apiConfigs: ApiConfigs,
     ) = ClubRouter(wellKnownClubHandler, invitationsHandler, apiConfigs).clubRouterFunction()
+
+    @Bean
+    fun messagingHandler(
+        service: ClubService,
+        objectMapper: ObjectMapper,
+    ) = MessagingHandler(service, objectMapper)
 
     @Bean
     fun messagePublisher(
