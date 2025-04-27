@@ -78,10 +78,7 @@ class ServiceConfiguration {
     ) = ClubRouter(wellKnownClubHandler, invitationsHandler, apiConfigs).clubRouterFunction()
 
     @Bean
-    fun messagingHandler(
-        service: ClubService,
-        objectMapper: ObjectMapper,
-    ) = MessagingHandler(service, objectMapper)
+    fun messagingHandler(service: ClubService) = MessagingHandler(service)
 
     @Bean
     fun messagePublisher(

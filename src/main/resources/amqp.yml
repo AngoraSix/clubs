@@ -20,6 +20,10 @@ spring:
           destination: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_EXCHANGE:projectCreated} # existing exchange (or creates)?
           group: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_QUEUE:registerWellKnownClubs}
           binder: a6Rabbit
+        registerWellKnownClubsForProjectManagement-in-0:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTMANAGEMENTCLUBS_INPUT_EXCHANGE:projectManagementCreated} # existing exchange (or creates)?
+          group: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTMANAGEMENTCLUBS_INPUT_QUEUE:registerWellKnownClubs}
+          binder: a6Rabbit
       rabbit:
         bindings:
           clubInvitation:
@@ -29,6 +33,9 @@ spring:
             producer:
               republishToDlq: false
           registerWellKnownClubsForProject-in-0:
+            consumer:
+              republishToDlq: false
+          registerWellKnownClubsForProjectManagement-in-0:
             consumer:
               republishToDlq: false
       binders:
@@ -43,4 +50,4 @@ spring:
                 password: ${A6_CLUBS_RABBITMQ_PASSWORD:guest}
                 virtual-host: ${A6_CLUBS_RABBITMQ_VHOST:/}
     function:
-      definition: registerWellKnownClubsForProject
+      definition: registerWellKnownClubsForProject;registerWellKnownClubsForProjectManagement

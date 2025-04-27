@@ -37,7 +37,14 @@ class ClubService(
         projectManagementId: String? = null,
     ): List<Club> =
         wellKnownClubConfigurations.wellKnownClubDescriptions.values.mapNotNull { description ->
-            repository.findByTypeAndProjectId(description.type, projectId)
+            repository.findSingleUsingFilter(
+                ListClubsFilter(
+                    type = description.type,
+                    projectId = projectId?.let(::listOf),
+                    projectManagementId = projectManagementId?.let(::listOf),
+                ),
+                requestingContributor,
+            )
                 ?: registerNewWellKnownClub(description, projectId, projectManagementId, requestingContributor)
         }
 
@@ -85,7 +92,14 @@ class ClubService(
         modificationOperations: List<ClubModification<out Any>>,
     ): Club? {
         val club =
-            repository.findByTypeAndProjectId(type, projectId)
+            repository.findSingleUsingFilter(
+                ListClubsFilter(
+                    type = type,
+                    projectId = projectId?.let(::listOf),
+                    projectManagementId = projectManagementId?.let(::listOf),
+                ),
+                requestingContributor,
+            )
                 ?: wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.let {
                     ClubFactory.fromDescription(
                         it,
