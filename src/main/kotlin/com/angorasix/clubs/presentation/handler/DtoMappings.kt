@@ -66,7 +66,7 @@ suspend fun Flow<ClubDto>.convertToDto(
 ): CollectionModel<ClubDto> {
     // Fix this when Spring HATEOAS provides consistent support for reactive/coroutines
     val dtoResources = this.toList(mutableListOf())
-    val isEmpty = dtoResources.isNullOrEmpty()
+    val isEmpty = dtoResources.isEmpty()
     val collectionModel =
         if (isEmpty) {
             val wrappers = EmbeddedWrappers(false)
@@ -75,10 +75,17 @@ suspend fun Flow<ClubDto>.convertToDto(
         } else {
             CollectionModel.of(dtoResources).withFallbackType(ClubDto::class.java)
         }
-    return collectionModel.resolveHypermedia(
+    return projectManagementId?.let {
+        collectionModel.resolveHypermediaForManagement(
+            contributor,
+            projectManagementId,
+            apiConfigs,
+            request,
+            isEmpty,
+        )
+    } ?: collectionModel.resolveHypermediaForProject(
         contributor,
         projectId,
-        projectManagementId,
         apiConfigs,
         request,
         isEmpty,

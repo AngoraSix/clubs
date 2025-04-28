@@ -11,10 +11,17 @@ import com.angorasix.commons.domain.modification.DomainObjectModification
  *
  * @author rozagerardo
  */
-abstract class ClubModification<U>(modifyValue: U) : DomainObjectModification<Club, U>(modifyValue)
+abstract class ClubModification<U>(
+    modifyValue: U,
+) : DomainObjectModification<Club, U>(modifyValue)
 
-class AddMember(member: Member) : ClubModification<Member>(member) {
-    override fun modify(simpleContributor: SimpleContributor, domainObject: Club): Club {
+class AddMember(
+    member: Member,
+) : ClubModification<Member>(member) {
+    override fun modify(
+        simpleContributor: SimpleContributor,
+        domainObject: Club,
+    ): Club {
         require(
             (domainObject.isAdmin(simpleContributor.contributorId))
                 .or(simpleContributor.contributorId == modifyValue.contributorId),
@@ -24,8 +31,13 @@ class AddMember(member: Member) : ClubModification<Member>(member) {
     }
 }
 
-class RemoveMember(member: Member) : ClubModification<Member>(member) {
-    override fun modify(requestingContributor: SimpleContributor, domainObject: Club): Club {
+class RemoveMember(
+    member: Member,
+) : ClubModification<Member>(member) {
+    override fun modify(
+        requestingContributor: SimpleContributor,
+        domainObject: Club,
+    ): Club {
         require(
             (domainObject.isAdmin(requestingContributor.contributorId))
                 .or(requestingContributor.contributorId == modifyValue.contributorId),

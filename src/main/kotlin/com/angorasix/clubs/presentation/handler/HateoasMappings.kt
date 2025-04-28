@@ -1,6 +1,7 @@
 package com.angorasix.clubs.presentation.handler
 
 import com.angorasix.clubs.domain.club.Club
+import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.AdminContributorRequirements
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
@@ -35,43 +36,13 @@ fun ClubDto.resolveHypermedia(
     val member = requestingContributor?.convertToMember()
     // add member
     if (member != null) {
-        if (club.canAddMember(member)) {
-            projectId?.let {
-                addLink(
-                    apiConfigs.routes.wellKnownPatchForProjectAndType,
-                    apiConfigs.clubActions.addMemberForProject,
-                    request,
-                    listOf(it, type),
-                    wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java,
-                )
-            }
-            projectManagementId?.let {
-                addLink(
-                    apiConfigs.routes.wellKnownPatchForManagementAndType,
-                    apiConfigs.clubActions.addMemberForManagement,
-                    request,
-                    listOf(it, type),
-                    wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java,
-                )
-            }
-        } else if (club.canRemoveMember(member)) {
-            projectId?.let {
-                addLink(
-                    apiConfigs.routes.wellKnownPatchForProjectAndType,
-                    apiConfigs.clubActions.removeMemberForProject,
-                    request,
-                    listOf(it, type),
-                )
-            }
-            projectManagementId?.let {
-                addLink(
-                    apiConfigs.routes.wellKnownPatchForManagementAndType,
-                    apiConfigs.clubActions.removeMemberForManagement,
-                    request,
-                    listOf(it, type),
-                )
-            }
-        }
+        resolveHypermediaForMember(
+            member,
+            club,
+            apiConfigs,
+            wellKnownClubConfigurations,
+            request,
+        )
     }
 
     // can invite
@@ -85,6 +56,52 @@ fun ClubDto.resolveHypermedia(
         )
     }
     return this
+}
+
+fun ClubDto.resolveHypermediaForMember(
+    member: Member,
+    club: Club,
+    apiConfigs: ApiConfigs,
+    wellKnownClubConfigurations: WellKnownClubConfigurations,
+    request: ServerRequest,
+) {
+    if (club.canAddMember(member)) {
+        projectId?.let {
+            addLink(
+                apiConfigs.routes.wellKnownPatchForProjectAndType,
+                apiConfigs.clubActions.addMemberForProject,
+                request,
+                listOf(it, type),
+                wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java,
+            )
+        }
+        projectManagementId?.let {
+            addLink(
+                apiConfigs.routes.wellKnownPatchForManagementAndType,
+                apiConfigs.clubActions.addMemberForManagement,
+                request,
+                listOf(it, type),
+                wellKnownClubConfigurations.wellKnownClubDescriptions[type]?.requirements ?: Void::class.java,
+            )
+        }
+    } else if (club.canRemoveMember(member)) {
+        projectId?.let {
+            addLink(
+                apiConfigs.routes.wellKnownPatchForProjectAndType,
+                apiConfigs.clubActions.removeMemberForProject,
+                request,
+                listOf(it, type),
+            )
+        }
+        projectManagementId?.let {
+            addLink(
+                apiConfigs.routes.wellKnownPatchForManagementAndType,
+                apiConfigs.clubActions.removeMemberForManagement,
+                request,
+                listOf(it, type),
+            )
+        }
+    }
 }
 
 suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionModel<ClubDto>> {
@@ -101,16 +118,14 @@ suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionMod
     return Pair(isEmpty, collectionModel)
 }
 
-fun CollectionModel<ClubDto>.resolveHypermedia(
+fun CollectionModel<ClubDto>.resolveHypermediaForProject(
     requestingContributor: SimpleContributor?,
     projectId: String?,
-    projectManagementId: String?,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
     isEmpty: Boolean,
 ): CollectionModel<ClubDto> {
-    projectManagementId?.let { addSelfLink(apiConfigs.routes.wellKnownGetForManagement, request, listOf(it)) }
-        ?: addSelfLink(apiConfigs.routes.wellKnownGetForProject, request, listOf(projectId ?: "undefinedProjectId"))
+    addSelfLink(apiConfigs.routes.wellKnownGetForProject, request, listOf(projectId ?: "undefinedProjectId"))
     // register wellknown clubs
     if (requestingContributor != null && requestingContributor.isAdminHint == true && isEmpty) {
         projectId?.let {
@@ -122,6 +137,20 @@ fun CollectionModel<ClubDto>.resolveHypermedia(
                 AdminContributorRequirements::class.java,
             )
         }
+    }
+    return this
+}
+
+fun CollectionModel<ClubDto>.resolveHypermediaForManagement(
+    requestingContributor: SimpleContributor?,
+    projectManagementId: String?,
+    apiConfigs: ApiConfigs,
+    request: ServerRequest,
+    isEmpty: Boolean,
+): CollectionModel<ClubDto> {
+    addSelfLink(apiConfigs.routes.wellKnownGetForManagement, request, listOf(projectManagementId ?: "undefinedProjectManagementId"))
+    // register wellknown clubs
+    if (requestingContributor != null && requestingContributor.isAdminHint == true && isEmpty) {
         projectManagementId?.let {
             addLink(
                 apiConfigs.routes.wellKnownRegisterForManagement,

@@ -14,11 +14,11 @@ import org.springframework.security.oauth2.jwt.JwtException
 import java.time.Instant
 
 object InvitationTokenUtils {
-
-    /* default */
-    val logger: Logger = LoggerFactory.getLogger(
-        InvitationTokenUtils::class.java,
-    )
+    // default
+    val logger: Logger =
+        LoggerFactory.getLogger(
+            InvitationTokenUtils::class.java,
+        )
 
     fun createInvitationToken(
         jwtEncoder: JwtEncoder,
@@ -28,32 +28,37 @@ object InvitationTokenUtils {
         contributorId: String? = null,
     ): InvitationToken {
         val expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime)
-        val claims = JwtClaimsSet.builder()
-            .issuer(tokenConfigurations.issuer)
-            .subject(email)
-            .issuedAt(Instant.now())
-            .expiresAt(expirationInstant)
-            .claim("alg", "HS256") // Specify the algorithm in claims
-            .claims {
-                it.putAll(
-                    mapOf(
-                        TokenConfiguration.CLAIMS_CONTRIBUTOR_EMAIL to email,
-                        TokenConfiguration.CLAIMS_CLUB_ID to clubId,
-                        TokenConfiguration.CLAIMS_CONTRIBUTOR_ID to contributorId,
-                    ),
-                )
-            }
-            .build()
-        val header = JwsHeader.with(MacAlgorithm.HS256)
-            .type("JWT") // Optional
-            .build()
+        val claims =
+            JwtClaimsSet
+                .builder()
+                .issuer(tokenConfigurations.issuer)
+                .subject(email)
+                .issuedAt(Instant.now())
+                .expiresAt(expirationInstant)
+                .claim("alg", "HS256") // Specify the algorithm in claims
+                .claims {
+                    it.putAll(
+                        mapOf(
+                            TokenConfiguration.CLAIMS_CONTRIBUTOR_EMAIL to email,
+                            TokenConfiguration.CLAIMS_CLUB_ID to clubId,
+                            TokenConfiguration.CLAIMS_CONTRIBUTOR_ID to contributorId,
+                        ),
+                    )
+                }.build()
+        val header =
+            JwsHeader
+                .with(MacAlgorithm.HS256)
+                .type("JWT") // Optional
+                .build()
 
-        val tokenValue = jwtEncoder.encode(
-            JwtEncoderParameters.from(
-                header,
-                claims,
-            ),
-        ).tokenValue
+        val tokenValue =
+            jwtEncoder
+                .encode(
+                    JwtEncoderParameters.from(
+                        header,
+                        claims,
+                    ),
+                ).tokenValue
         return InvitationToken(
             email = email,
             clubId = clubId,
@@ -67,7 +72,10 @@ object InvitationTokenUtils {
      * Decode and validate the JWT string. Return a custom InvitationToken if valid,
      * or null/throw if invalid or expired.
      */
-    fun decodeToken(tokenValue: String, jwtDecoder: JwtDecoder): InvitationToken? {
+    fun decodeToken(
+        tokenValue: String,
+        jwtDecoder: JwtDecoder,
+    ): InvitationToken? {
         return try {
             val jwt: Jwt = jwtDecoder.decode(tokenValue)
             // e.g., check custom claims, expiration, etc.

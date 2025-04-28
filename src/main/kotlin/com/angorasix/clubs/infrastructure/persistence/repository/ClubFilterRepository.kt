@@ -13,11 +13,15 @@ import kotlinx.coroutines.flow.Flow
  * @author rozagerardo
  */
 interface ClubFilterRepository {
-
     fun findUsingFilter(
         filter: ListClubsFilter,
         requestingContributor: SimpleContributor?,
     ): Flow<Club>
+
+    suspend fun findSingleUsingFilter(
+        filter: ListClubsFilter,
+        requestingContributor: SimpleContributor?,
+    ): Club?
 
     suspend fun addMemberToClub(
         clubId: String,

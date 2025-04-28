@@ -19,14 +19,18 @@ import org.springframework.data.mongodb.core.query.Update
  *
  * @author rozagerardo
  */
-class ClubFilterRepositoryImpl(val mongoOps: ReactiveMongoOperations) : ClubFilterRepository {
-
+class ClubFilterRepositoryImpl(
+    val mongoOps: ReactiveMongoOperations,
+) : ClubFilterRepository {
     override fun findUsingFilter(
         filter: ListClubsFilter,
         requestingContributor: SimpleContributor?,
-    ): Flow<Club> {
-        return mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).asFlow()
-    }
+    ): Flow<Club> = mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).asFlow()
+
+    override suspend fun findSingleUsingFilter(
+        filter: ListClubsFilter,
+        requestingContributor: SimpleContributor?,
+    ): Club? = mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).awaitFirstOrNull()
 
     override suspend fun addMemberToClub(
         clubId: String,
@@ -35,12 +39,13 @@ class ClubFilterRepositoryImpl(val mongoOps: ReactiveMongoOperations) : ClubFilt
         fromInvitation: Boolean,
     ): Club? {
         // check if is already member
-        val query = addMemberConditionsQuery(
-            clubId,
-            fromInvitation,
-            member.contributorId,
-            requestingContributor,
-        )
+        val query =
+            addMemberConditionsQuery(
+                clubId,
+                fromInvitation,
+                member.contributorId,
+                requestingContributor,
+            )
         val update = Update()
         update.addToSet("members", member)
         return mongoOps.findAndModify(query, update, Club::class.java).awaitFirstOrNull()
@@ -52,13 +57,14 @@ private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): 
 
     projectId?.let { query.addCriteria(where("projectId").`in`(it as Collection<Any>)) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
-    val orCriteria = mutableListOf(
-        where("admins").elemMatch(
-            where("contributorId").`is`(requestingContributor?.contributorId),
-        ),
-        where("open").`is`(true),
-        where("public").`is`(true),
-    )
+    val orCriteria =
+        mutableListOf(
+            where("admins").elemMatch(
+                where("contributorId").`is`(requestingContributor?.contributorId),
+            ),
+            where("open").`is`(true),
+            where("public").`is`(true),
+        )
     if (!memberContributorId.isNullOrEmpty()) {
         orCriteria.add(
             where("members").elemMatch(

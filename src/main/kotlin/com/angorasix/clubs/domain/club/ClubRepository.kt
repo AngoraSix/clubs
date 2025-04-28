@@ -13,6 +13,4 @@ import org.springframework.data.repository.kotlin.CoroutineSortingRepository
 interface ClubRepository :
     CoroutineCrudRepository<Club, String>,
     CoroutineSortingRepository<Club, String>,
-    ClubFilterRepository {
-    suspend fun findByTypeAndProjectId(type: String, projectId: String?): Club?
-}
+    ClubFilterRepository

@@ -1,37 +1,53 @@
-  # https://docs.spring.io/spring-cloud-stream/reference/rabbit/rabbit_overview/putting-it-all-together.html#page-title
-  configs:
-    amqp:
-      bindings:
-        clubInvitation: ${A6_PROJECTS_CLUBS_RABBITMQ_BINDINGS_CLUBINVITATION:clubInvitation}
-        clubMemberAdded: ${A6_PROJECTS_CLUBS_RABBITMQ_BINDINGS_CLUBMEMBERADDED:clubMemberAdded}
+# https://docs.spring.io/spring-cloud-stream/reference/rabbit/rabbit_overview/putting-it-all-together.html#page-title
+configs:
+  amqp:
+    bindings:
+      clubInvitation: ${A6_CLUBS_RABBITMQ_BINDINGS_CLUBINVITATION:clubInvitation}
+      clubMemberAdded: ${A6_CLUBS_RABBITMQ_BINDINGS_CLUBMEMBERADDED:clubMemberAdded}
 
-  spring:
-    cloud:
-      stream:
-        output-bindings: # we need explicit bindings bc we use StreamBridge
-          - ${configs.amqp.bindings.clubInvitation}
-          - ${configs.amqp.bindings.clubMemberAdded}
+spring:
+  cloud:
+    stream:
+      output-bindings: # we need explicit bindings bc we use StreamBridge
+        - ${configs.amqp.bindings.clubInvitation}
+        - ${configs.amqp.bindings.clubMemberAdded}
+      bindings:
+        clubInvitation:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBINVITATION_EXCHANGE:clubInvitation}
+        clubMemberAdded:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBMEMBERADDED_EXCHANGE:clubMemberAdded}
+        registerWellKnownClubsForProject-in-0:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_EXCHANGE:projectCreated} # existing exchange (or creates)?
+          group: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_QUEUE:registerWellKnownClubs}
+          binder: a6Rabbit
+        registerWellKnownClubsForProjectManagement-in-0:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTMANAGEMENTCLUBS_INPUT_EXCHANGE:projectManagementCreated} # existing exchange (or creates)?
+          group: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTMANAGEMENTCLUBS_INPUT_QUEUE:registerWellKnownClubs}
+          binder: a6Rabbit
+      rabbit:
         bindings:
           clubInvitation:
-            destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBINVITATION_EXCHANGE:clubInvitation}
+            producer:
+              republishToDlq: false
           clubMemberAdded:
-            destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBMEMBERADDED_EXCHANGE:clubMemberAdded}
-        rabbit:
-          bindings:
-            clubInvitation:
-              producer:
-                republishToDlq: false
-            clubMemberAdded:
-              producer:
-                republishToDlq: false
-        binders:
-          a6Rabbit:
-            type: rabbit
-            environment:
-              spring:
-                rabbitmq:
-                  host: ${A6_CLUBS_RABBITMQ_HO  ST:localhost}
-                  port: ${A6_CLUBS_RABBITMQ_PORT:5672}
-                  username: ${A6_CLUBS_RABBITMQ_USER:guest}
-                  password: ${A6_CLUBS_RABBITMQ_PASSWORD:guest}
-                  virtual-host: ${A6_CLUBS_RABBITMQ_VHOST:/}
+            producer:
+              republishToDlq: false
+          registerWellKnownClubsForProject-in-0:
+            consumer:
+              republishToDlq: false
+          registerWellKnownClubsForProjectManagement-in-0:
+            consumer:
+              republishToDlq: false
+      binders:
+        a6Rabbit:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: ${A6_CLUBS_RABBITMQ_HOST:localhost}
+                port: ${A6_CLUBS_RABBITMQ_PORT:5672}
+                username: ${A6_CLUBS_RABBITMQ_USER:guest}
+                password: ${A6_CLUBS_RABBITMQ_PASSWORD:guest}
+                virtual-host: ${A6_CLUBS_RABBITMQ_VHOST:/}
+    function:
+      definition: registerWellKnownClubsForProject;registerWellKnownClubsForProjectManagement

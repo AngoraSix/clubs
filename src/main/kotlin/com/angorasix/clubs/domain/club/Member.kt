@@ -13,16 +13,14 @@ data class Member(
     val privateData: Map<String, Any> = mutableMapOf(),
     var status: MemberStatusValue = MemberStatusValue.INACTIVE,
 ) {
+    override fun equals(other: Any?): Boolean = other is Member && other.contributorId == contributorId
 
-    override fun equals(other: Any?): Boolean =
-        other is Member && other.contributorId == contributorId
-
-    override fun hashCode(): Int {
-        return contributorId.hashCode()
-    }
+    override fun hashCode(): Int = contributorId.hashCode()
 }
 
-enum class MemberStatusValue(val value: String) {
+enum class MemberStatusValue(
+    val value: String,
+) {
     ACTIVE("active"),
     INACTIVE("inactive"),
     PENDING("pending"),
@@ -31,7 +29,9 @@ enum class MemberStatusValue(val value: String) {
     fun isActive(): Boolean = this == ACTIVE
 }
 
-enum class MemberRolesValue(val value: String) {
+enum class MemberRolesValue(
+    val value: String,
+) {
     ADMIN("admin"),
     CONTRIBUTOR("contributor"),
 }

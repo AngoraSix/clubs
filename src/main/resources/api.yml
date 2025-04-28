@@ -1,7 +1,7 @@
 configs:
   api:
     basePaths:
-      clubs: clubs
+      clubs: "clubs"
       baseWellKnown: "/well-known"
       baseByIdRoute: "/{id}"
       baseByProjectId: "/project/{projectId}"

@@ -15,7 +15,7 @@ object ClubFactory {
         projectManagementId: String?,
     ): Club =
         Club(
-            name = "$projectId+${clubDescription.type}",
+            name = "${projectId ?: projectManagementId}+${clubDescription.type}",
             type = clubDescription.type,
             projectId = projectId,
             projectManagementId = projectManagementId,
