@@ -8,7 +8,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubCo
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.MemberDto
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import org.springframework.hateoas.CollectionModel
@@ -22,7 +22,7 @@ import org.springframework.web.reactive.function.server.ServerRequest
  * @author rozagerardo
  */
 fun Club.convertToDto(
-    contributor: SimpleContributor?,
+    contributor: A6Contributor?,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
     request: ServerRequest,
@@ -58,7 +58,7 @@ fun Club.convertToDto(
 }
 
 suspend fun Flow<ClubDto>.convertToDto(
-    contributor: SimpleContributor?,
+    contributor: A6Contributor?,
     projectId: String?,
     projectManagementId: String?,
     apiConfigs: ApiConfigs,
@@ -93,7 +93,7 @@ suspend fun Flow<ClubDto>.convertToDto(
 }
 
 suspend fun Flow<ClubDto>.convertToDto(
-    contributor: SimpleContributor?,
+    contributor: A6Contributor?,
     filter: ListClubsFilter,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
@@ -108,7 +108,7 @@ suspend fun Flow<ClubDto>.convertToDto(
     )
 }
 
-fun SimpleContributor.convertToMember(status: MemberStatusValue? = null): Member =
+fun A6Contributor.convertToMember(status: MemberStatusValue? = null): Member =
     Member(
         contributorId = contributorId,
         emptyList(),

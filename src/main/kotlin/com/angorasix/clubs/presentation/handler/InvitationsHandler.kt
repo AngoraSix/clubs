@@ -5,8 +5,7 @@ import com.angorasix.clubs.application.InvitationTokenService
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.presentation.dto.InvitationTokenInput
-import com.angorasix.commons.domain.DetailedContributor
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import com.angorasix.commons.infrastructure.constants.AngoraSixInfrastructure
 import com.angorasix.commons.reactive.presentation.error.resolveBadRequest
 import com.angorasix.commons.reactive.presentation.error.resolveExceptionResponse
@@ -41,7 +40,7 @@ class InvitationsHandler(
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val clubId = request.pathVariable("id")
         val tokenInput = request.awaitBody(InvitationTokenInput::class)
-        return if (requestingContributor is DetailedContributor) {
+        return if (requestingContributor is A6Contributor) {
             try {
                 invitationTokenService
                     .inviteContributor(
@@ -71,7 +70,7 @@ class InvitationsHandler(
             request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY]
         val clubId = request.pathVariable("id")
         val tokenValue = request.pathVariable("tokenValue")
-        return if (requestingContributor is SimpleContributor) {
+        return if (requestingContributor is A6Contributor) {
             try {
                 service
                     .addMemberFromInvitationToken(

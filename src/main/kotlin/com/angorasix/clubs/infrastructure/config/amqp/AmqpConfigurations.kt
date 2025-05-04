@@ -18,5 +18,6 @@ data class AmqpConfigurations(
 
 class BindingConfigs(
     val clubInvitation: String,
-    val clubMemberAdded: String,
+    val projectClubMemberJoined: String,
+    val managementClubMemberJoined: String,
 )

@@ -3,7 +3,7 @@ package com.angorasix.clubs.infrastructure.persistence.repository
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,18 +15,18 @@ import kotlinx.coroutines.flow.Flow
 interface ClubFilterRepository {
     fun findUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: SimpleContributor?,
+        requestingContributor: A6Contributor?,
     ): Flow<Club>
 
     suspend fun findSingleUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: SimpleContributor?,
+        requestingContributor: A6Contributor?,
     ): Club?
 
     suspend fun addMemberToClub(
         clubId: String,
         member: Member,
-        requestingContributor: SimpleContributor,
+        requestingContributor: A6Contributor,
         fromInvitation: Boolean = false,
     ): Club?
 }

@@ -4,7 +4,7 @@ import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.domain.club.modification.AddMember
 import com.angorasix.clubs.domain.club.modification.ClubModification
 import com.angorasix.clubs.domain.club.modification.RemoveMember
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import com.angorasix.commons.presentation.dto.PatchOperation
 import com.angorasix.commons.presentation.dto.PatchOperationSpec
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -33,7 +33,7 @@ data class ClubDto(
     val projectId: String? = null,
     val projectManagementId: String? = null,
     val members: MutableSet<MemberDto> = mutableSetOf(),
-    val admins: Set<SimpleContributor> = emptySet(),
+    val admins: Set<A6Contributor> = emptySet(),
     val open: Boolean? = null,
     val public: Boolean? = null,
     val social: Boolean? = null,
@@ -53,7 +53,7 @@ enum class SupportedPatchOperations(
                 operation.op == "remove" && operation.path == "/members/-"
 
             override fun mapToObjectModification(
-                contributor: SimpleContributor,
+                contributor: A6Contributor,
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {
@@ -70,7 +70,7 @@ enum class SupportedPatchOperations(
                 operation.op == "add" && operation.path == "/members/+"
 
             override fun mapToObjectModification(
-                contributor: SimpleContributor,
+                contributor: A6Contributor,
                 operation: PatchOperation,
                 objectMapper: ObjectMapper,
             ): ClubModification<Member> {

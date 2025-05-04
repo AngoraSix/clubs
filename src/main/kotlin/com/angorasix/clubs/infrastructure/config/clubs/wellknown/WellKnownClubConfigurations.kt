@@ -1,5 +1,8 @@
 package com.angorasix.clubs.infrastructure.config.clubs.wellknown
 
+import com.angorasix.commons.domain.clubs.WellKnownClubTypes
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -10,20 +13,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "wellknown.configurations.clubs")
 class WellKnownClubConfigurations(
-    var wellKnownClubTypes: Map<WellKnownClubTypes, String>,
+    wellKnownClubTypes: Map<WellKnownClubTypes, WellKnownClubTypes>, // to validate correct usage of values...
     wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
 ) {
+    // default
+    private val logger: Logger =
+        LoggerFactory.getLogger(
+            WellKnownClubConfigurations::class.java,
+        )
+
+    init {
+        logger.isDebugEnabled.let { logger.debug("Supported WellKnownClubTypes: {}", wellKnownClubTypes) }
+    }
+
     var wellKnownClubDescriptions: MutableMap<String, WellKnownClubDescription> =
-        processProperties(wellKnownClubTypes, wellKnownClubDescriptions)
+        processProperties(wellKnownClubDescriptions)
 }
 
-fun processProperties(
-    wellKnownClubTypes: Map<WellKnownClubTypes, String>,
-    wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>,
-): MutableMap<String, WellKnownClubDescription> {
+fun processProperties(wellKnownClubDescriptions: Collection<RawWellKnownClubDescription>): MutableMap<String, WellKnownClubDescription> {
     val typeToRequirement: Map<String, Class<out DescriptionRequirements>> =
         mapOf(
-            wellKnownClubTypes[WellKnownClubTypes.CONTRIBUTOR_CANDIDATES]!!
+            WellKnownClubTypes.CONTRIBUTOR_CANDIDATES.name
                 to (ContributorCandidatesRequirements::class.java),
         )
     return wellKnownClubDescriptions
@@ -60,11 +70,6 @@ data class RawWellKnownClubDescription(
     var isProjectClub: Boolean = false,
     var isProjectManagementClub: Boolean = false,
 )
-
-enum class WellKnownClubTypes {
-    CONTRIBUTOR_CANDIDATES,
-    PROJECT_MANAGEMENT_MEMBERS,
-}
 
 interface DescriptionRequirements
 

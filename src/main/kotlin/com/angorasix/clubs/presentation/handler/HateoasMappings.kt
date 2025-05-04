@@ -8,7 +8,7 @@ import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubCo
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.ClubDto
 import com.angorasix.clubs.presentation.dto.InvitationTokenInput
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import com.angorasix.commons.reactive.presentation.mappings.addLink
 import com.angorasix.commons.reactive.presentation.mappings.addSelfLink
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +24,7 @@ import org.springframework.web.reactive.function.server.ServerRequest
  * @author rozagerardo
  */
 fun ClubDto.resolveHypermedia(
-    requestingContributor: SimpleContributor?,
+    requestingContributor: A6Contributor?,
     club: Club,
     apiConfigs: ApiConfigs,
     wellKnownClubConfigurations: WellKnownClubConfigurations,
@@ -119,7 +119,7 @@ suspend fun Flow<ClubDto>.generateCollectionModel(): Pair<Boolean, CollectionMod
 }
 
 fun CollectionModel<ClubDto>.resolveHypermediaForProject(
-    requestingContributor: SimpleContributor?,
+    requestingContributor: A6Contributor?,
     projectId: String?,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
@@ -142,7 +142,7 @@ fun CollectionModel<ClubDto>.resolveHypermediaForProject(
 }
 
 fun CollectionModel<ClubDto>.resolveHypermediaForManagement(
-    requestingContributor: SimpleContributor?,
+    requestingContributor: A6Contributor?,
     projectManagementId: String?,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
@@ -165,7 +165,7 @@ fun CollectionModel<ClubDto>.resolveHypermediaForManagement(
 }
 
 fun CollectionModel<ClubDto>.resolveHypermedia(
-    requestingContributor: SimpleContributor?,
+    requestingContributor: A6Contributor?,
     filter: ListClubsFilter,
     apiConfigs: ApiConfigs,
     request: ServerRequest,
