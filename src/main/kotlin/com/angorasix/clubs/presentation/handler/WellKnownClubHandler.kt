@@ -6,7 +6,7 @@ import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
 import com.angorasix.clubs.presentation.dto.SupportedPatchOperations
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import com.angorasix.commons.infrastructure.constants.AngoraSixInfrastructure
 import com.angorasix.commons.presentation.dto.Patch
 import com.angorasix.commons.reactive.presentation.error.resolveBadRequest
@@ -46,7 +46,7 @@ class WellKnownClubHandler(
         val projectId = pathVariables["projectId"]
         val projectManagementId = pathVariables["projectManagementId"]
 
-        return if (requestingContributor is SimpleContributor) {
+        return if (requestingContributor is A6Contributor) {
             try {
                 service
                     .registerAllWellKnownClub(
@@ -97,10 +97,10 @@ class WellKnownClubHandler(
         val projectManagementId = pathVariables["projectManagementId"]
 
         val type = request.pathVariable("type")
-        return service.getWellKnownClub(type, projectId, projectManagementId, contributor as SimpleContributor?)?.let {
+        return service.getWellKnownClub(type, projectId, projectManagementId, contributor as A6Contributor?)?.let {
             val outputClub =
                 it.convertToDto(
-                    contributor as? SimpleContributor,
+                    contributor,
                     apiConfigs,
                     wellKnownClubConfigurations,
                     request,
@@ -118,7 +118,7 @@ class WellKnownClubHandler(
      */
     suspend fun getWellKnownClubs(request: ServerRequest): ServerResponse {
         val requestingContributor =
-            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? A6Contributor
         val pathVariables = request.pathVariables()
         val projectId = pathVariables["projectId"]
         val projectManagementId = pathVariables["projectManagementId"]
@@ -165,7 +165,7 @@ class WellKnownClubHandler(
      */
     suspend fun searchWellKnownClubs(request: ServerRequest): ServerResponse {
         val requestingContributor =
-            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? SimpleContributor
+            request.attributes()[AngoraSixInfrastructure.REQUEST_ATTRIBUTE_CONTRIBUTOR_KEY] as? A6Contributor
         val queryFilter = ListClubsFilter.fromMultiValueMap(request.queryParams())
         return service
             .findClubs(
@@ -208,7 +208,7 @@ class WellKnownClubHandler(
 
         val type = request.pathVariable("type")
         val patch = request.awaitBody(Patch::class)
-        return if (contributor is SimpleContributor) {
+        return if (contributor is A6Contributor) {
             try {
                 val modifyOperations =
                     patch.operations.map {

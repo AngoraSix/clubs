@@ -3,7 +3,7 @@ package com.angorasix.clubs.infrastructure.persistence.repository
 import com.angorasix.clubs.domain.club.Club
 import com.angorasix.clubs.domain.club.Member
 import com.angorasix.clubs.infrastructure.queryfilters.ListClubsFilter
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -20,22 +20,22 @@ import org.springframework.data.mongodb.core.query.Update
  * @author rozagerardo
  */
 class ClubFilterRepositoryImpl(
-    val mongoOps: ReactiveMongoOperations,
+    private val mongoOps: ReactiveMongoOperations,
 ) : ClubFilterRepository {
     override fun findUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: SimpleContributor?,
+        requestingContributor: A6Contributor?,
     ): Flow<Club> = mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).asFlow()
 
     override suspend fun findSingleUsingFilter(
         filter: ListClubsFilter,
-        requestingContributor: SimpleContributor?,
+        requestingContributor: A6Contributor?,
     ): Club? = mongoOps.find(filter.toQuery(requestingContributor), Club::class.java).awaitFirstOrNull()
 
     override suspend fun addMemberToClub(
         clubId: String,
         member: Member,
-        requestingContributor: SimpleContributor,
+        requestingContributor: A6Contributor,
         fromInvitation: Boolean,
     ): Club? {
         // check if is already member
@@ -52,10 +52,11 @@ class ClubFilterRepositoryImpl(
     }
 }
 
-private fun ListClubsFilter.toQuery(requestingContributor: SimpleContributor?): Query {
+private fun ListClubsFilter.toQuery(requestingContributor: A6Contributor?): Query {
     val query = Query()
 
     projectId?.let { query.addCriteria(where("projectId").`in`(it as Collection<Any>)) }
+    projectManagementId?.let { query.addCriteria(where("projectManagementId").`in`(it as Collection<Any>)) }
     type?.let { query.addCriteria(where("type").`is`(it)) }
     val orCriteria =
         mutableListOf(
@@ -88,7 +89,7 @@ private fun addMemberConditionsQuery(
     clubId: String,
     fromInvitation: Boolean,
     newMemberContributorId: String,
-    requestingContributor: SimpleContributor,
+    requestingContributor: A6Contributor,
 ): Query {
     val query = Query()
 

@@ -1,6 +1,6 @@
 package com.angorasix.clubs.domain.club
 
-import com.angorasix.commons.domain.SimpleContributor
+import com.angorasix.commons.domain.A6Contributor
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import java.time.Instant
@@ -21,7 +21,7 @@ data class Club
         val projectId: String?,
         val projectManagementId: String?,
         var members: MutableSet<Member> = mutableSetOf(),
-        val admins: MutableSet<SimpleContributor> = mutableSetOf(),
+        val admins: MutableSet<A6Contributor> = mutableSetOf(),
         val open: Boolean, // anyone can access without invitation
         val public: Boolean, // visible for the rest
         val social: Boolean, // members can interact / see themselves
@@ -38,7 +38,7 @@ data class Club
             projectId: String?,
             projectManagementId: String?,
             members: MutableSet<Member> = mutableSetOf(),
-            admins: MutableSet<SimpleContributor> = mutableSetOf(),
+            admins: MutableSet<A6Contributor> = mutableSetOf(),
             open: Boolean,
             public: Boolean,
             social: Boolean,
@@ -64,7 +64,7 @@ data class Club
          * @param requestingContributor - contributor to be added to the 'admins' set
          */
         fun register(
-            requestingContributor: SimpleContributor,
+            requestingContributor: A6Contributor,
             isCreatorMember: Boolean? = false,
         ) {
             admins.add(requestingContributor)
@@ -86,8 +86,18 @@ data class Club
          * @param member - contributor to be added to the set
          */
         fun addMember(member: Member) {
-            val memberToAdd = members.find { it.contributorId == member.contributorId } ?: member
-            members.add(if (open) memberToAdd.copy(status = MemberStatusValue.ACTIVE) else memberToAdd)
+            val existingMember = members.find { it.contributorId == member.contributorId }
+            val updatedMember =
+                existingMember?.let {
+                    members.remove(it)
+                    it.copy(
+                        roles = member.roles,
+                        data = existingMember.data + member.data,
+                        privateData = existingMember.privateData + member.privateData,
+                    )
+                } ?: member
+            updatedMember.status = if (open) MemberStatusValue.ACTIVE else member.status
+            members.add(updatedMember)
         }
 
         /**
@@ -97,7 +107,7 @@ data class Club
          */
         fun removeMember(member: Member) {
             val existingMember = members.find { it.contributorId == member.contributorId }
-            existingMember?.let { members.add(existingMember.copy(status = MemberStatusValue.INACTIVE)) }
+            existingMember?.let { it.status = MemberStatusValue.INACTIVE }
         }
 
         /**
@@ -106,7 +116,7 @@ data class Club
          *
          * @param requestingContributor - contributor trying to see the Club.
          */
-        fun isVisibleToContributor(requestingContributor: SimpleContributor?): Boolean =
+        fun isVisibleToContributor(requestingContributor: A6Contributor?): Boolean =
             public
                 .or(
                     social.and(
@@ -118,7 +128,7 @@ data class Club
                     ),
                 ).or(isAdmin(requestingContributor?.contributorId))
 
-        fun resolveAdmins(requestingContributor: SimpleContributor?): Set<SimpleContributor> =
+        fun resolveAdmins(requestingContributor: A6Contributor?): Set<A6Contributor> =
             if (isVisibleToContributor(requestingContributor)) {
                 admins
             } else {
@@ -132,8 +142,12 @@ data class Club
          */
         fun canAddMember(contributor: Member): Boolean =
             open
-                .and(!members.contains(contributor))
-                .and(!isAdmin(contributor.contributorId))
+                .and(
+                    (!members.contains(contributor))
+                        .or(
+                            members.find { it.contributorId == contributor.contributorId }?.status == MemberStatusValue.INACTIVE,
+                        ),
+                ).and(!isAdmin(contributor.contributorId))
 
         /**
          * Checks whether a particular contributor can be removed as a member of this Club.
@@ -142,8 +156,13 @@ data class Club
          */
         fun canRemoveMember(contributor: Member): Boolean =
             open
-                .and(members.contains(contributor))
-                .and(!isAdmin(contributor.contributorId))
+                .and(
+                    members
+                        .contains(contributor)
+                        .and(
+                            members.find { it.contributorId == contributor.contributorId }?.status == MemberStatusValue.ACTIVE,
+                        ),
+                ).and(!isAdmin(contributor.contributorId))
 
         /**
          * Checks whether a particular contributor is Admin of this Club.

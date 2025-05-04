@@ -1,9 +1,9 @@
 package com.angorasix.clubs.messaging.listener.router
 
 import com.angorasix.clubs.messaging.listener.handler.MessagingHandler
-import com.angorasix.commons.infrastructure.intercommunication.dto.messaging.A6InfraMessageDto
-import com.angorasix.commons.infrastructure.intercommunication.dto.project.ProjectCreated
-import com.angorasix.commons.infrastructure.intercommunication.dto.projectmanagement.ProjectManagementCreated
+import com.angorasix.commons.infrastructure.intercommunication.messaging.A6InfraMessageDto
+import com.angorasix.commons.infrastructure.intercommunication.project.ProjectCreated
+import com.angorasix.commons.infrastructure.intercommunication.projectmanagement.ProjectManagementCreated
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 

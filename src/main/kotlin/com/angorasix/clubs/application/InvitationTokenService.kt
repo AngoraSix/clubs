@@ -5,14 +5,14 @@ import com.angorasix.clubs.infrastructure.applicationevents.InvitationCreatedApp
 import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
 import com.angorasix.clubs.infrastructure.token.InvitationToken
 import com.angorasix.clubs.infrastructure.token.InvitationTokenUtils
-import com.angorasix.commons.domain.DetailedContributor
+import com.angorasix.commons.domain.A6Contributor
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
 
 class InvitationTokenService(
     private val repository: ClubRepository,
-    private val applicationEvents: ApplicationEventPublisher,
+    private val applicationEventPublisher: ApplicationEventPublisher,
     private val tokenConfigurations: TokenConfigurations,
     private val invitationTokenJwtEncoder: JwtEncoder,
     private val invitationTokenJwtDecoder: JwtDecoder,
@@ -24,7 +24,7 @@ class InvitationTokenService(
     suspend fun inviteContributor(
         clubId: String,
         email: String,
-        requestingContributor: DetailedContributor,
+        requestingContributor: A6Contributor,
         contributorId: String? = null,
     ): InvitationToken? {
         val club = repository.findById(clubId)
@@ -37,7 +37,7 @@ class InvitationTokenService(
                     clubId = clubId,
                     contributorId = contributorId,
                 )
-            applicationEvents.publishEvent(
+            applicationEventPublisher.publishEvent(
                 InvitationCreatedApplicationEvent(
                     invitationToken = invitationToken,
                     club = club,

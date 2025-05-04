@@ -2,8 +2,8 @@ wellknown:
   configurations:
     clubs:
       wellKnownClubTypes:
-        CONTRIBUTOR_CANDIDATES: ${A6_CLUBS_WELLKNOWNTYPES_CONTRIBUTORCANDIDATES:contributor-candidates}
-        PROJECT_MANAGEMENT_MEMBERS: ${A6_CLUBS_WELLKNOWNTYPES_PROJECTMANAGEMENTMEMBERS:project-management-members}
+        CONTRIBUTOR_CANDIDATES: CONTRIBUTOR_CANDIDATES
+        PROJECT_MANAGEMENT_MEMBERS: PROJECT_MANAGEMENT_MEMBERS
       wellKnownClubDescriptions:
         - type: ${wellknown.configurations.clubs.wellKnownClubTypes.CONTRIBUTOR_CANDIDATES}
           open: true

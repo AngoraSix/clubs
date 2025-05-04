@@ -9,6 +9,7 @@ logging:
     root: ${A6_CLUBS_LOGGING_LEVEL_GENERAL:INFO}
     org.springframework.web: ${A6_CLUBS_LOGGING_LEVEL_WEB:INFO}
     com.angorasix: ${A6_CLUBS_LOGGING_LEVEL_ANGORASIX:INFO}
+    org.springframework.data.mongodb.core: ${A6_CLUBS_LOGGING_LEVEL_DATA:INFO}
 
 spring:
   config:

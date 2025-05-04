@@ -3,19 +3,23 @@ configs:
   amqp:
     bindings:
       clubInvitation: ${A6_CLUBS_RABBITMQ_BINDINGS_CLUBINVITATION:clubInvitation}
-      clubMemberAdded: ${A6_CLUBS_RABBITMQ_BINDINGS_CLUBMEMBERADDED:clubMemberAdded}
+      projectClubMemberJoined: ${A6_CLUBS_RABBITMQ_BINDINGS_PROJECTCLUBMEMBERJOINED:projectClubMemberJoined}
+      managementClubMemberJoined: ${A6_CLUBS_RABBITMQ_BINDINGS_MANAGEMENTCLUBMEMBERJOINED:managementClubMemberJoined}
 
 spring:
   cloud:
     stream:
       output-bindings: # we need explicit bindings bc we use StreamBridge
         - ${configs.amqp.bindings.clubInvitation}
-        - ${configs.amqp.bindings.clubMemberAdded}
+        - ${configs.amqp.bindings.projectClubMemberJoined}
+        - ${configs.amqp.bindings.managementClubMemberJoined}
       bindings:
         clubInvitation:
           destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBINVITATION_EXCHANGE:clubInvitation}
-        clubMemberAdded:
-          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_CLUBMEMBERADDED_EXCHANGE:clubMemberAdded}
+        projectClubMemberJoined:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_PROJECTCLUBMEMBERJOINED_EXCHANGE:projectClubMemberJoined}
+        managementClubMemberJoined:
+          destination: ${A6_CLUBS_RABBITMQ_OUTPUT_MANAGEMENTCLUBMEMBERJOINED_EXCHANGE:managementClubMemberJoined}
         registerWellKnownClubsForProject-in-0:
           destination: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_EXCHANGE:projectCreated} # existing exchange (or creates)?
           group: ${A6_CLUBS_RABBITMQ_OUTPUT_REGISTERPROJECTCLUBS_INPUT_QUEUE:registerWellKnownClubs}
@@ -29,7 +33,10 @@ spring:
           clubInvitation:
             producer:
               republishToDlq: false
-          clubMemberAdded:
+          projectClubMemberJoined:
+            producer:
+              republishToDlq: false
+          managementClubMemberJoined:
             producer:
               republishToDlq: false
           registerWellKnownClubsForProject-in-0:

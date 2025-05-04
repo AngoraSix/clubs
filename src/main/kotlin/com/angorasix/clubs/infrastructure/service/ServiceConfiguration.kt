@@ -3,6 +3,7 @@ package com.angorasix.clubs.infrastructure.service
 import com.angorasix.clubs.application.ClubService
 import com.angorasix.clubs.application.InvitationTokenService
 import com.angorasix.clubs.domain.club.ClubRepository
+import com.angorasix.clubs.infrastructure.applicationevents.ApplicationEventsListener
 import com.angorasix.clubs.infrastructure.config.amqp.AmqpConfigurations
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
@@ -50,9 +51,10 @@ class ServiceConfiguration {
     fun clubService(
         repository: ClubRepository,
         invitationTokenService: InvitationTokenService,
+        applicationEventPublisher: ApplicationEventPublisher,
         encryptionUtils: TokenEncryptionUtil,
         wellKnownClubConfigurations: WellKnownClubConfigurations,
-    ) = ClubService(repository, invitationTokenService, encryptionUtils, wellKnownClubConfigurations)
+    ) = ClubService(repository, invitationTokenService, applicationEventPublisher, encryptionUtils, wellKnownClubConfigurations)
 
     @Bean
     fun wellKnownClubHandler(
@@ -85,4 +87,7 @@ class ServiceConfiguration {
         streamBridge: StreamBridge,
         amqpConfigs: AmqpConfigurations,
     ) = MessagePublisher(streamBridge, amqpConfigs)
+
+    @Bean
+    fun applicationEventsListener(messagePublisher: MessagePublisher) = ApplicationEventsListener(messagePublisher)
 }
