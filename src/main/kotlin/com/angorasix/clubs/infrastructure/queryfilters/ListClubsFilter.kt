@@ -21,7 +21,7 @@ data class ListClubsFilter(
         multiMap.add("projectId", projectId?.joinToString(","))
         multiMap.add("projectManagementId", projectManagementId?.joinToString(","))
         multiMap.add("type", type)
-        multiMap.add("adminId", memberContributorId?.joinToString(","))
+        multiMap.add("memberContributorId", memberContributorId?.joinToString(","))
         multiMap.add("adminId", adminId?.joinToString(","))
         return multiMap
     }
