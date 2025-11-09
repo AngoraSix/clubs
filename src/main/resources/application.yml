@@ -19,3 +19,5 @@ spring:
   data:
     mongodb:
       uri: ${A6_CLUBS_MONGO_DB_URI:mongodb://localhost:27017/}${A6_CLUBS_MONGO_DB_NAME:a6-clubs}${A6_CLUBS_MONGO_DB_PARAMS:?}
+  profiles:
+    active: web,worker

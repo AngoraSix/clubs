@@ -21,17 +21,21 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
 
 @Configuration
 class ServiceConfiguration {
+    @Profile("web")
     @Bean("invitationTokenJwtEncoder")
     fun invitationJwtEncoder(tokenConfigurations: TokenConfigurations): JwtEncoder = TokenConfiguration.jwtEncoder(tokenConfigurations)
 
+    @Profile("web")
     @Bean("invitationTokenJwtDecoder")
     fun invitationJwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder = TokenConfiguration.jwtDecoder(tokenConfigurations)
 
+    @Profile("web")
     @Bean
     fun invitationTokenService(
         repository: ClubRepository,
@@ -47,6 +51,7 @@ class ServiceConfiguration {
         invitationTokenJwtDecoder,
     )
 
+    @Profile(value = ["web", "messaging"])
     @Bean
     fun clubService(
         repository: ClubRepository,
@@ -56,6 +61,7 @@ class ServiceConfiguration {
         wellKnownClubConfigurations: WellKnownClubConfigurations,
     ) = ClubService(repository, invitationTokenService, applicationEventPublisher, encryptionUtils, wellKnownClubConfigurations)
 
+    @Profile("web")
     @Bean
     fun wellKnownClubHandler(
         service: ClubService,
@@ -64,6 +70,7 @@ class ServiceConfiguration {
         objectMapper: ObjectMapper,
     ) = WellKnownClubHandler(service, apiConfigs, wellKnownClubConfigurations, objectMapper)
 
+    @Profile("web")
     @Bean
     fun invitationsHandler(
         service: ClubService,
@@ -72,6 +79,7 @@ class ServiceConfiguration {
         wellKnownClubConfigurations: WellKnownClubConfigurations,
     ) = InvitationsHandler(service, invitationTokenService, apiConfigs, wellKnownClubConfigurations)
 
+    @Profile("web")
     @Bean
     fun clubRouter(
         wellKnownClubHandler: WellKnownClubHandler,
@@ -79,15 +87,18 @@ class ServiceConfiguration {
         apiConfigs: ApiConfigs,
     ) = ClubRouter(wellKnownClubHandler, invitationsHandler, apiConfigs).clubRouterFunction()
 
+    @Profile("worker")
     @Bean
     fun messagingHandler(service: ClubService) = MessagingHandler(service)
 
+    @Profile("worker")
     @Bean
     fun messagePublisher(
         streamBridge: StreamBridge,
         amqpConfigs: AmqpConfigurations,
     ) = MessagePublisher(streamBridge, amqpConfigs)
 
+    @Profile("worker")
     @Bean
     fun applicationEventsListener(messagePublisher: MessagePublisher) = ApplicationEventsListener(messagePublisher)
 }
