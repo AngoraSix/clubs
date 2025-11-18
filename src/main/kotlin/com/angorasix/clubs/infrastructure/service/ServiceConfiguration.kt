@@ -7,7 +7,7 @@ import com.angorasix.clubs.infrastructure.applicationevents.ApplicationEventsLis
 import com.angorasix.clubs.infrastructure.config.amqp.AmqpConfigurations
 import com.angorasix.clubs.infrastructure.config.api.ApiConfigs
 import com.angorasix.clubs.infrastructure.config.clubs.wellknown.WellKnownClubConfigurations
-import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
+import com.angorasix.clubs.infrastructure.config.token.InvitationTokenConfigurations
 import com.angorasix.clubs.infrastructure.security.TokenEncryptionUtil
 import com.angorasix.clubs.infrastructure.token.TokenConfiguration
 import com.angorasix.clubs.messaging.listener.handler.MessagingHandler
@@ -27,22 +27,24 @@ import org.springframework.security.oauth2.jwt.JwtEncoder
 @Configuration
 class ServiceConfiguration {
     @Bean("invitationTokenJwtEncoder")
-    fun invitationJwtEncoder(tokenConfigurations: TokenConfigurations): JwtEncoder = TokenConfiguration.jwtEncoder(tokenConfigurations)
+    fun invitationJwtEncoder(invitationTokenConfigurations: InvitationTokenConfigurations): JwtEncoder =
+        TokenConfiguration.jwtEncoder(invitationTokenConfigurations)
 
     @Bean("invitationTokenJwtDecoder")
-    fun invitationJwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder = TokenConfiguration.jwtDecoder(tokenConfigurations)
+    fun invitationJwtDecoder(invitationTokenConfigurations: InvitationTokenConfigurations): JwtDecoder =
+        TokenConfiguration.jwtDecoder(invitationTokenConfigurations)
 
     @Bean
     fun invitationTokenService(
         repository: ClubRepository,
         applicationEventPublisher: ApplicationEventPublisher,
-        tokenConfigurations: TokenConfigurations,
+        invitationTokenConfigurations: InvitationTokenConfigurations,
         @Qualifier("invitationTokenJwtEncoder") invitationTokenJwtEncoder: JwtEncoder,
         @Qualifier("invitationTokenJwtDecoder") invitationTokenJwtDecoder: JwtDecoder,
     ) = InvitationTokenService(
         repository,
         applicationEventPublisher,
-        tokenConfigurations,
+        invitationTokenConfigurations,
         invitationTokenJwtEncoder,
         invitationTokenJwtDecoder,
     )

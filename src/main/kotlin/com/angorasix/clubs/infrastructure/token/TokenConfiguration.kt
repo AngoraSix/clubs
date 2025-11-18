@@ -1,6 +1,6 @@
 package com.angorasix.clubs.infrastructure.token
 
-import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
+import com.angorasix.clubs.infrastructure.config.token.InvitationTokenConfigurations
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.OctetSequenceKey
@@ -21,13 +21,13 @@ object TokenConfiguration {
 
     private const val TOKEN_KEY_ID = "clubTokenJWKId"
 
-    fun jwtEncoder(tokenConfigurations: TokenConfigurations): JwtEncoder {
-        require(tokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
+    fun jwtEncoder(invitationTokenConfigurations: InvitationTokenConfigurations): JwtEncoder {
+        require(invitationTokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
             "The secret must be at least 32 characters long for HS256."
         }
         val jwk =
             OctetSequenceKey
-                .Builder(tokenConfigurations.secret.toByteArray())
+                .Builder(invitationTokenConfigurations.secret.toByteArray())
                 .algorithm(JWSAlgorithm.HS256)
                 .keyID(TOKEN_KEY_ID)
                 .build()
@@ -38,12 +38,12 @@ object TokenConfiguration {
         return NimbusJwtEncoder(jwkSource)
     }
 
-    fun jwtDecoder(tokenConfigurations: TokenConfigurations): JwtDecoder {
-        require(tokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
+    fun jwtDecoder(invitationTokenConfigurations: InvitationTokenConfigurations): JwtDecoder {
+        require(invitationTokenConfigurations.secret.length >= SECRET_LENGTH_LIMIT) {
             "The secret must be at least 32 characters long for HS256."
         }
         val keySpec =
-            SecretKeySpec(tokenConfigurations.secret.toByteArray(), JWSAlgorithm.HS256.name)
+            SecretKeySpec(invitationTokenConfigurations.secret.toByteArray(), JWSAlgorithm.HS256.name)
         return NimbusJwtDecoder.withSecretKey(keySpec).build()
     }
 }
