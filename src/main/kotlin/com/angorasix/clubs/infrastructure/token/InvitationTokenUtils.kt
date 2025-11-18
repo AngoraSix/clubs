@@ -1,6 +1,6 @@
 package com.angorasix.clubs.infrastructure.token
 
-import com.angorasix.clubs.infrastructure.config.token.TokenConfigurations
+import com.angorasix.clubs.infrastructure.config.token.InvitationTokenConfigurations
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm
@@ -22,16 +22,16 @@ object InvitationTokenUtils {
 
     fun createInvitationToken(
         jwtEncoder: JwtEncoder,
-        tokenConfigurations: TokenConfigurations,
+        invitationTokenConfigurations: InvitationTokenConfigurations,
         email: String,
         clubId: String,
         contributorId: String? = null,
     ): InvitationToken {
-        val expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime)
+        val expirationInstant = Instant.now().plusSeconds(invitationTokenConfigurations.expirationTime)
         val claims =
             JwtClaimsSet
                 .builder()
-                .issuer(tokenConfigurations.issuer)
+                .issuer(invitationTokenConfigurations.issuer)
                 .subject(email)
                 .issuedAt(Instant.now())
                 .expiresAt(expirationInstant)
@@ -63,7 +63,7 @@ object InvitationTokenUtils {
             email = email,
             clubId = clubId,
             tokenValue = tokenValue,
-            expirationInstant = Instant.now().plusSeconds(tokenConfigurations.expirationTime),
+            expirationInstant = Instant.now().plusSeconds(invitationTokenConfigurations.expirationTime),
             contributorId = contributorId,
         )
     }
