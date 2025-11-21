@@ -29,4 +29,9 @@ interface ClubFilterRepository {
         requestingContributor: A6Contributor,
         fromInvitation: Boolean = false,
     ): Club?
+
+    suspend fun findClubWhereMemberExists(
+        clubId: String,
+        contributorId: String,
+    ): Club?
 }

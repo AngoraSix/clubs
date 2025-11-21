@@ -154,39 +154,61 @@ class ClubService(
         tokenValue: String,
         clubId: String,
         requestingContributor: A6Contributor,
-    ): Club? =
-        invitationTokenService
-            .checkInvitationToken(
-                tokenValue,
-            )?.takeUnless {
+    ): Club? {
+        // 1. Validate token
+        return invitationTokenService
+            .checkInvitationToken(tokenValue)
+            ?.takeUnless {
                 it.clubId != clubId ||
-                    (it.contributorId != null && requestingContributor.contributorId != it.contributorId)
+                    (
+                        it.contributorId != null &&
+                            it.contributorId != requestingContributor.contributorId
+                    )
             }?.let {
+                // 2. Check if already member
+                val existing =
+                    repository.findClubWhereMemberExists(
+                        clubId = clubId,
+                        contributorId = requestingContributor.contributorId,
+                    )
+                if (existing != null) {
+                    return existing // already a member → idempotent success
+                }
+
+                // 3. Build member
                 val member =
                     Member(
                         contributorId = requestingContributor.contributorId,
                         roles = emptyList(),
                         data = mapOf("invited" to true),
-                        privateData = mapOf("invitedEmail" to encryptionUtils.encrypt(it.email)),
+                        privateData =
+                            mapOf(
+                                "invitedEmail" to encryptionUtils.encrypt(it.email),
+                            ),
                         status = MemberStatusValue.ACTIVE,
                     )
-                repository
-                    .addMemberToClub(
+
+                // 4. Try to add new member
+                val updatedClub =
+                    repository.addMemberToClub(
                         clubId = it.clubId,
                         member = member,
                         requestingContributor = requestingContributor,
                         fromInvitation = true,
-                    )?.let { updatedClub ->
-                        applicationEventPublisher.publishEvent(
-                            MemberJoinedApplicationEvent(
-                                memberContributorId = member.contributorId,
-                                club = updatedClub,
-                                requestingContributor = requestingContributor,
-                            ),
-                        )
-                        updatedClub
-                    }
+                    )
+                if (updatedClub !== null) {
+                    // 5. Publish event
+                    applicationEventPublisher.publishEvent(
+                        MemberJoinedApplicationEvent(
+                            memberContributorId = member.contributorId,
+                            club = updatedClub,
+                            requestingContributor = requestingContributor,
+                        ),
+                    )
+                }
+                updatedClub
             }
+    }
 
     /**
      * Method to get a single Well-Known [Club] from a type and projectId, without making further validations.
