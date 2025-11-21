@@ -50,6 +50,19 @@ class ClubFilterRepositoryImpl(
         update.addToSet("members", member)
         return mongoOps.findAndModify(query, update, Club::class.java).awaitFirstOrNull()
     }
+
+    override suspend fun findClubWhereMemberExists(
+        clubId: String,
+        contributorId: String,
+    ): Club? =
+        mongoOps
+            .findOne(
+                getClubWhereMemberExistsQuery(
+                    clubId,
+                    contributorId,
+                ),
+                Club::class.java,
+            ).awaitFirstOrNull()
 }
 
 private fun ListClubsFilter.toQuery(requestingContributor: A6Contributor?): Query {
@@ -111,3 +124,16 @@ private fun addMemberConditionsQuery(
     }
     return query
 }
+
+private fun getClubWhereMemberExistsQuery(
+    clubId: String,
+    contributorId: String,
+): Query =
+    Query.query(
+        where("id")
+            .`is`(clubId)
+            .and("members")
+            .elemMatch(
+                where("contributorId").`is`(contributorId),
+            ),
+    )
